@@ -1,3 +1,1 @@
-🚀 SGSITS Placement Information Portal 🎓
-
-A modern and interactive web application designed to centralize campus placement information for SGSITS Indore. The platform provides a searchable directory of recruiting companies, eligibility criteria, salary packages, selection processes, and branch-wise opportunities. Featuring advanced search, responsive design, real-time filtering, detailed company profiles, and placement statistics, it helps students quickly discover and analyze recruitment opportunities in a seamless and user-friendly experience. 💼🔍📊✨
+🌐 Web Repository 🚀 | A collection of modern web development projects, experiments, and UI/UX implementations. Showcasing responsive designs, interactive interfaces, front-end technologies, and creative web solutions built with a focus on performance, accessibility, clean code, and user experience. 💻✨🎨
