@@ -1,0 +1,236 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gesture Paint Ultra</title>
+<style>
+html,body{margin:0;height:100%;overflow:hidden;background:#000}
+#video,#paint,#overlay{position:fixed;inset:0;width:100%;height:100%}
+#video{object-fit:cover;z-index:0}
+#paint{z-index:1}
+#overlay{z-index:2;pointer-events:none}
+#ui{
+position:fixed;top:10px;left:10px;z-index:10;
+width:310px;padding:12px;
+background:rgba(11,12,16,.85);
+border:1px solid #00F0FF;
+border-radius:16px;color:white;
+font-family:Arial;
+backdrop-filter:blur(10px)
+}
+button,input{width:100%;margin-top:6px}
+button{padding:10px;border-radius:10px;background:#1A1A24;color:white;border:1px solid #00F0FF}
+.green{color:#00FF66}
+</style>
+</head>
+<body>
+
+<video id="video" autoplay playsinline muted></video>
+<canvas id="paint"></canvas>
+<canvas id="overlay"></canvas>
+
+<div id="ui">
+<h3 style="margin:0;color:#00F0FF">Gesture Paint Ultra</h3>
+<div>Status: <span id="status" class="green">Loading</span></div>
+<div>FPS: <span id="fps" class="green">0</span></div>
+<div>Color: <span id="colorName" class="green">White</span></div>
+<input type="range" id="size" min="2" max="30" value="8">
+<button onclick="clearDrawing()">Clear Drawing</button>
+<p style="font-size:12px">
+Pinch = Draw<br>
+Closed Fist = Erase<br>
+V Sign = Toggle Black/White
+</p>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+
+<script>
+(async()=>{
+
+const video=document.getElementById("video");
+const paint=document.getElementById("paint");
+const overlay=document.getElementById("overlay");
+
+const p=paint.getContext("2d");
+const o=overlay.getContext("2d");
+
+function resize(){
+paint.width=overlay.width=innerWidth;
+paint.height=overlay.height=innerHeight;
+}
+resize();
+addEventListener("resize",resize);
+
+window.clearDrawing=()=>{
+p.clearRect(0,0,paint.width,paint.height);
+};
+
+let brushColor="#FFFFFF";
+let vCooldown=false;
+
+try{
+const stream=await navigator.mediaDevices.getUserMedia({
+video:{
+width:{ideal:640},
+height:{ideal:480},
+frameRate:{ideal:30,max:30}
+}
+});
+video.srcObject=stream;
+}catch(e){
+document.getElementById("status").textContent="Camera Error";
+return;
+}
+
+const hands=new Hands({
+locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`
+});
+
+hands.setOptions({
+maxNumHands:1,
+modelComplexity:0,
+minDetectionConfidence:0.55,
+minTrackingConfidence:0.55
+});
+
+let prev=null;
+let smoothX=0;
+let smoothY=0;
+
+function isClosedPalm(h){
+const tips=[8,12,16,20];
+let folded=0;
+for(let t of tips){
+if(h[t].y>h[t-2].y) folded++;
+}
+return folded>=4;
+}
+
+function isVSign(h){
+const indexUp=h[8].y<h[6].y;
+const middleUp=h[12].y<h[10].y;
+const ringDown=h[16].y>h[14].y;
+const pinkyDown=h[20].y>h[18].y;
+return indexUp&&middleUp&&ringDown&&pinkyDown;
+}
+
+hands.onResults((results)=>{
+
+o.clearRect(0,0,overlay.width,overlay.height);
+
+if(!results.multiHandLandmarks?.length){
+prev=null;
+return;
+}
+
+const hand=results.multiHandLandmarks[0];
+
+const ix=hand[8].x*overlay.width;
+const iy=hand[8].y*overlay.height;
+
+if(smoothX===0){
+smoothX=ix;
+smoothY=iy;
+}
+
+smoothX=smoothX*0.7+ix*0.3;
+smoothY=smoothY*0.7+iy*0.3;
+
+o.beginPath();
+o.arc(smoothX,smoothY,12,0,Math.PI*2);
+o.strokeStyle="#00F0FF";
+o.lineWidth=3;
+o.stroke();
+
+if(isVSign(hand) && !vCooldown){
+brushColor=brushColor==="#FFFFFF"?"#000000":"#FFFFFF";
+document.getElementById("colorName").textContent=
+brushColor==="#FFFFFF"?"White":"Black";
+
+vCooldown=true;
+setTimeout(()=>vCooldown=false,1000);
+}
+
+if(isClosedPalm(hand)){
+
+document.getElementById("status").textContent="Erasing";
+
+p.save();
+p.globalCompositeOperation="destination-out";
+p.beginPath();
+p.arc(smoothX,smoothY,35,0,Math.PI*2);
+p.fill();
+p.restore();
+
+prev=null;
+return;
+}
+
+const thumb=hand[4];
+const dist=Math.hypot(
+thumb.x-hand[8].x,
+thumb.y-hand[8].y
+);
+
+if(dist<0.05){
+
+document.getElementById("status").textContent="Drawing";
+
+if(prev){
+
+p.beginPath();
+p.moveTo(prev.x,prev.y);
+
+for(let i=0;i<5;i++){
+const t=i/5;
+const mx=prev.x+(smoothX-prev.x)*t;
+const my=prev.y+(smoothY-prev.y)*t;
+p.lineTo(mx,my);
+}
+
+p.lineTo(smoothX,smoothY);
+p.strokeStyle=brushColor;
+p.lineWidth=document.getElementById("size").value;
+p.lineCap="round";
+p.lineJoin="round";
+p.stroke();
+}
+
+prev={x:smoothX,y:smoothY};
+
+}else{
+document.getElementById("status").textContent="Tracking";
+prev=null;
+}
+});
+
+video.addEventListener("loadeddata",()=>{
+const cam=new Camera(video,{
+onFrame:async()=>{
+await hands.send({image:video});
+},
+width:640,
+height:480
+});
+cam.start();
+},{once:true});
+
+let last=performance.now();
+
+function loop(){
+requestAnimationFrame(loop);
+const now=performance.now();
+document.getElementById("fps").textContent=Math.round(1000/(now-last));
+last=now;
+}
+loop();
+
+})();
+</script>
+
+</body>
+</html>
