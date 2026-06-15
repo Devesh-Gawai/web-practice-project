@@ -1,0 +1,3366 @@
+================================================================================
+                    GESTURE AR STUDIO
+                   Complete User Manual v1.0
+================================================================================
+
+TABLE OF CONTENTS
+─────────────────────────────────────────────────────────────────────────────
+
+1. GETTING STARTED
+2. HAND GESTURES REFERENCE
+3. VOICE COMMANDS REFERENCE
+4. UI CONTROLS & SHORTCUTS
+5. OBJECT MANAGEMENT
+6. MATERIAL SYSTEM
+7. PHYSICS ENGINE
+8. PERFORMANCE & ANALYTICS
+9. ADVANCED FEATURES
+10. TROUBLESHOOTING
+11. KEYBOARD SHORTCUTS CHEAT SHEET
+12. VOICE COMMAND EXAMPLES
+13. GESTURE COMBINATIONS
+14. TIPS & TRICKS
+
+
+================================================================================
+1. GETTING STARTED
+================================================================================
+
+LAUNCHING THE APPLICATION
+──────────────────────────
+
+1. Open gesture-ar-studio.html in a modern web browser (Chrome, Edge, Safari, Firefox)
+2. Allow camera access when prompted (required for hand tracking)
+3. View the Gesture Guide overlay (shows all 8 gestures and their actions)
+4. Click "LAUNCH STUDIO ✦" to enter the application
+5. An initial cube will be spawned automatically
+
+INTERFACE LAYOUT
+────────────────
+
+Screen divided into:
+  • Header (56px) — Logo, mode pills, action buttons
+  • Left Panel (260px) — Object shapes, materials, colors, spawn control
+  • Center Canvas — Camera feed + 3D rendered objects
+  • Right Panel (260px) — Real-time performance metrics, hand tracking stats
+  • Bottom Toolbar — Mode selection (Select, Move, Rotate, Scale)
+  • Gesture HUD — Current gesture name, icon, confidence bar (bottom-center)
+  • Voice Indicator — Voice command status (bottom-right)
+
+MODES
+─────
+
+Four interaction modes accessible via toolbar or number keys:
+
+  1. SELECT MODE [1] — Default. Point at objects to select them.
+  2. MOVE MODE [2] — Drag selected object around the scene.
+  3. ROTATE MODE [3] — Mouse drag rotates selected object. Auto-rotates in this mode.
+  4. SCALE MODE [4] — Mouse wheel or drag to resize selected object.
+
+
+================================================================================
+2. HAND GESTURES REFERENCE
+================================================================================
+
+COMPLETE GESTURE LIBRARY
+────────────────────────
+
+All gestures require hand to be visible to camera. Gestures use debouncing
+(must hold for 4+ frames) to prevent accidental triggers.
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ GESTURE #1: OPEN PALM                                              ✋    │
+├──────────────────────────────────────────────────────────────────────────┤
+│ Trigger: All 5 fingers extended, hand open and relaxed                  │
+│ Action: SELECT / HOVER over nearest object within 0.8 unit radius       │
+│ Confidence: 95% (highest accuracy)                                       │
+│ Use: Point your open hand at any object to select it.                   │
+│      Selected object shows cyan outline ring on screen.                 │
+│ Notes: • Hover over objects to see their tooltip                        │
+│        • Nearest object within range is automatically selected          │
+│        • Can hold palm steady to keep selection locked                  │
+└──────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ GESTURE #2: PINCH                                                  🤏   │
+├──────────────────────────────────────────────────────────────────────────┤
+│ Trigger: Thumb tip and index finger tip touch (distance < 0.06)         │
+│ Action: GRAB & DRAG selected object                                      │
+│ Confidence: 90% (very reliable)                                          │
+│ Use: 1. Select an object with Open Palm                                 │
+│      2. Bring thumb & index together (pinch motion)                     │
+│      3. Keep pinching while moving hand to drag object                  │
+│ Notes: • Object follows your hand smoothly with 35% lerp blending       │
+│        • Velocity is reset when grabbing (no inertia carryover)         │
+│        • Locked objects cannot be grabbed                               │
+│        • Works in all 3D space (forward/back/left/right/up/down)        │
+│        • Grabbing starts an undo point automatically                    │
+└──────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ GESTURE #3: DOUBLE PINCH                                          🤞    │
+├──────────────────────────────────────────────────────────────────────────┤
+│ Trigger: Pinch (thumb + index) + middle finger extended                 │
+│ Action: DUPLICATE selected object                                        │
+│ Confidence: 88% (good, but requires 2 simultaneous conditions)           │
+│ Use: 1. Select an object                                                │
+│      2. While pinching thumb-to-index, extend middle finger             │
+│      3. Release after 1.2 seconds for duplicate to appear               │
+│ Notes: • Duplicate appears 0.6 units to the right of original           │
+│        • Duplicate inherits all properties (color, material, scale)     │
+│        • Cooldown: 1.2 seconds between duplicates                       │
+│        • Creates undo point automatically                               │
+│        • Gesture must be held stable to trigger                         │
+└──────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ GESTURE #4: FIST                                                  ✊    │
+├──────────────────────────────────────────────────────────────────────────┤
+│ Trigger: All 5 fingers curled inward (closed fist)                       │
+│ Action: DELETE selected object                                           │
+│ Confidence: 92% (very reliable)                                          │
+│ Use: 1. Select object with Open Palm                                    │
+│      2. Close your hand into a fist                                     │
+│      3. Hold for 1 second                                               │
+│ Notes: • Object is removed from scene permanently                       │
+│        • Creates undo point (use Ctrl+Z to restore)                     │
+│        • Locked objects CANNOT be deleted (unlock first)                │
+│        • Cooldown: 1 second between deletions                           │
+│        • No confirmation prompt (act carefully!)                        │
+│        • Toast notification confirms deletion                           │
+└──────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ GESTURE #5: POINT (TELEPORT)                                    ☝️    │
+├──────────────────────────────────────────────────────────────────────────┤
+│ Trigger: Index finger extended, other fingers curled                     │
+│ Action: TELEPORT selected object to pointed location                    │
+│ Confidence: 88% (very reliable)                                          │
+│ Use: 1. Select object with Open Palm                                    │
+│      2. Point your index finger at desired location                     │
+│      3. Object snaps/lerps to that point smoothly                       │
+│ Notes: • Teleport uses 15% lerp blending (fast movement)                │
+│        • Works from anywhere in the scene                               │
+│        • Useful for quick repositioning                                 │
+│        • Creates undo point automatically                               │
+│        • No cooldown (can spam)                                         │
+│        • Trajectory-based (follows camera-to-hand ray)                  │
+└──────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ GESTURE #6: SPREAD (SCALE UP)                                    🖐️    │
+├──────────────────────────────────────────────────────────────────────────┤
+│ Trigger: All 5 fingers extended + fingers spread wide (distance > 0.35) │
+│ Action: SCALE UP selected object                                         │
+│ Confidence: 85% (decent, depends on hand size)                           │
+│ Use: 1. Hold hand open with fingers spread maximally                    │
+│      2. Selected object grows in size                                   │
+│      3. Increase spread distance for faster scaling                     │
+│ Notes: • Continuous scaling (doesn't require release/retrigger)         │
+│        • Scales at 0.8% per frame (0.8×)                                │
+│        • Max scale: 8.0× (min: 0.2×)                                    │
+│        • Pairs well with COMPRESS gesture for full size control         │
+│        • Scale visible in right panel and scale slider                  │
+└──────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ GESTURE #7: ROCK (ROTATE)                                        🤘    │
+├──────────────────────────────────────────────────────────────────────────┤
+│ Trigger: Index + pinky extended, middle/ring fingers curled              │
+│ Action: ROTATE selected object (Y-axis)                                  │
+│ Confidence: 83% (good, but requires specific finger combo)               │
+│ Use: 1. Make rock/metal sign (index + pinky out)                        │
+│      2. Keep hand steady → selected object rotates                      │
+│      3. Move hand horizontally to control rotation speed                │
+│ Notes: • Rotates around Y-axis (vertical) continuously at 0.04 rad/frame│
+│        • Smooth continuous rotation (not stepped)                       │
+│        • No cooldown (constantly rotating)                              │
+│        • Pairs with WRIST TWIST for full 3-axis rotation                │
+│        • Useful for inspecting objects from all angles                  │
+└──────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ GESTURE #8: THUMBS UP (LOCK/UNLOCK)                              👍    │
+├──────────────────────────────────────────────────────────────────────────┤
+│ Trigger: Thumb extended, other fingers curled                            │
+│ Action: LOCK / UNLOCK selected object                                    │
+│ Confidence: 87% (very reliable)                                          │
+│ Use: 1. Select object                                                   │
+│      2. Make thumbs-up gesture (thumb pointing up)                      │
+│      3. Object lock status toggles (locked/unlocked)                    │
+│ Notes: • Locked objects show lock icon (🔒) in scene list               │
+│        • Locked objects: cannot be dragged, deleted, or scaled          │
+│        • Useful for protecting important objects from accidents         │
+│        • Cooldown: 0.8 seconds between toggles                          │
+│        • Lock status appears in UI immediately                          │
+│        • Toast confirms lock/unlock action                              │
+└──────────────────────────────────────────────────────────────────────────┘
+
+GESTURE RELIABILITY & ACCURACY
+──────────────────────────────
+
+Confidence Scores (shown in Gesture HUD):
+  • 95%+ = Excellent, no false triggers
+  • 85-94% = Very Good, rare false positives
+  • 70-84% = Good, occasional false positives
+  • <70% = Fair, use voice commands instead
+
+Tips for Maximum Accuracy:
+  ✓ Keep hand in full view of camera
+  ✓ Good lighting is critical (avoid backlit scenes)
+  ✓ Hold gestures steady for 4+ frames
+  ✓ Keep distance from camera 0.5-1.5 meters for best tracking
+  ✓ Use debug mode (G key) to visualize landmark tracking
+  ✓ Avoid rapid hand movements (use slow, deliberate gestures)
+
+GESTURE FAILS & FIXES
+─────────────────────
+
+If a gesture isn't triggering:
+  Problem: "Gesture not recognized"
+    → Check confidence percentage in gesture HUD
+    → Improve lighting conditions
+    → Hold gesture steady (don't flap)
+    → Try voice command alternative
+
+  Problem: "Wrong gesture triggered"
+    → Hand position might be ambiguous
+    → Enable debug mode (G) to see landmarks
+    → Separate fingers more clearly
+    → Try gesture with more exaggerated pose
+
+  Problem: "No hand detected"
+    → Check camera access permissions
+    → Ensure good lighting
+    → Move hand into frame
+    → Try demo mode (VOICE OFF shows gesture guides)
+
+
+================================================================================
+3. VOICE COMMANDS REFERENCE
+================================================================================
+
+VOICE COMMAND ACTIVATION
+────────────────────────
+
+Start Voice Input:
+  • Click voice indicator (bottom-right) to toggle ON/OFF
+  • Or press [V] key
+  • Status shows "LISTENING" when active
+  • Animated bars indicate voice level being detected
+  • Browser must support Web Speech API (Chrome, Edge, Safari)
+
+Stop Voice Input:
+  • Click voice indicator again
+  • Or press [V] key
+  • Status shows "VOICE OFF"
+  • Voice recognition stops immediately
+
+OBJECT CREATION COMMANDS
+────────────────────────
+
+"Create [SHAPE]"
+  Create a new 3D object of specified type.
+  
+  Variations:
+    ✓ "Create Cube"
+    ✓ "Create Sphere"
+    ✓ "Create Cylinder"
+    ✓ "Create Cone"
+    ✓ "Create Torus"
+    ✓ "Create Pyramid"
+    ✓ "Create Capsule"
+    ✓ "Create Plane"
+    ✓ "Spawn Sphere"
+    ✓ "Create Box"           (same as Cube)
+    ✓ "Create Object"        (defaults to Cube)
+
+  Results:
+    • Object spawns in front of camera with random spread
+    • Automatically selected (cyan outline)
+    • Takes current material/color settings
+    • Creates undo point
+
+  Example Usage:
+    "Create Sphere" → Spawns new sphere
+    "Spawn Torus" → Spawns new torus
+
+
+OBJECT MODIFICATION COMMANDS
+─────────────────────────────
+
+"Delete" or "Delete Selected Object" or "Remove Object"
+  Delete currently selected object from scene.
+  
+  Requirements:
+    • Must have object selected
+    • Object must NOT be locked
+  
+  Results:
+    • Object removed immediately
+    • Creates undo point (Ctrl+Z to restore)
+    • Notification: "Object deleted" (red toast)
+  
+  Examples:
+    "Delete"
+    "Delete Selected Object"
+    "Remove"
+
+
+"Duplicate" or "Duplicate Object" or "Copy"
+  Duplicate selected object.
+  
+  Requirements:
+    • Must have object selected
+  
+  Results:
+    • New object appears 0.6 units to the right
+    • Inherits all properties (color, material, scale)
+    • Automatically selected
+    • Creates undo point
+  
+  Examples:
+    "Duplicate"
+    "Duplicate Object"
+    "Copy Object"
+
+
+"Lock" or "Lock Object"
+  Lock selected object (prevents accidental moves/deletes).
+  
+  Results:
+    • Object locked status toggles
+    • Locked icon (🔒) appears in scene list
+    • Cannot be dragged, scaled, or deleted
+    • Creates undo point
+  
+  Examples:
+    "Lock"
+    "Lock Object"
+    "Unlock"        (if already locked)
+
+
+MATERIAL COMMANDS
+─────────────────
+
+"Apply [MATERIAL] Material" or "[MATERIAL]" or "Make it [MATERIAL]"
+  Change material of selected object.
+  
+  Material Names:
+    • Glass
+    • Metal
+    • Neon
+    • Holographic
+    • Chrome
+    • Wood
+    • Plastic
+    • Carbon
+  
+  Examples:
+    "Apply Glass Material"
+    "Glass"
+    "Metal"
+    "Make it Neon"
+    "Apply Chrome"
+
+
+COLOR COMMANDS
+──────────────
+
+"Change Color to [COLOR]" or "[COLOR]" or "Make it [COLOR]"
+  Change color of selected object.
+  
+  Color Names (full approved palette):
+    • Cyan
+    • Magenta
+    • Green
+    • Amber
+    • Orange (alias for Amber)
+    • White
+    • Purple (non-standard, but mapped)
+  
+  Results:
+    • Color applied immediately to selected object
+    • Emissive color matches (for holographic/neon)
+    • Creates undo point
+  
+  Examples:
+    "Change Color to Cyan"
+    "Magenta"
+    "Make it Green"
+    "White"
+    "Amber"
+    "Orange"
+
+
+PHYSICS COMMANDS
+────────────────
+
+"Physics On" or "Enable Physics" or "Enable Gravity"
+  Enable gravity and physics simulation.
+  
+  Results:
+    • Gravity field activated (downward acceleration)
+    • Objects fall to virtual floor
+    • Collisions enabled between objects
+    • Restitution (bounce) applied on impact
+    • Friction on floor collision
+    • Amber indicator shows "ON"
+  
+  Examples:
+    "Physics On"
+    "Enable Physics"
+    "Gravity"
+
+
+"Physics Off" or "Disable Physics" or "Disable Gravity"
+  Disable gravity and physics simulation.
+  
+  Results:
+    • Gravity field disabled
+    • Objects freeze in place (no more falling)
+    • Collisions disabled
+    • Objects float gently (continue idle animation)
+    • Amber indicator shows "OFF"
+  
+  Examples:
+    "Physics Off"
+    "Disable Physics"
+    "No Gravity"
+
+
+SCENE COMMANDS
+──────────────
+
+"Clear Scene" or "Clear All" or "Delete All"
+  Remove all objects from the scene.
+  
+  Results:
+    • All objects deleted
+    • Scene becomes empty
+    • No selection active
+    • Creates undo point
+    • Confirmation: "Scene cleared" (amber toast)
+  
+  Danger Zone: No confirmation prompt!
+  
+  Examples:
+    "Clear Scene"
+    "Clear All"
+    "Delete Everything"
+
+
+"Export Scene" or "Save Scene" or "Download Scene"
+  Export entire scene as JSON file (downloads automatically).
+  
+  Contents Exported:
+    • Version metadata
+    • Timestamp
+    • All objects (type, material, color, position, rotation, scale)
+    • Lock status for each object
+  
+  Results:
+    • File named "gesture-ar-scene.json" downloads
+    • Can be used for backup or sharing
+    • Currently export-only (import in future versions)
+    • Notification: "Scene exported ✦" (green toast)
+  
+  Examples:
+    "Export Scene"
+    "Save Scene"
+    "Download Scene"
+
+
+UNDO/REDO COMMANDS
+───────────────────
+
+"Undo" or "Undo Last" or "Go Back"
+  Undo last action.
+  
+  Supported Actions:
+    • Object spawn/delete
+    • Property changes (color, material, scale)
+    • Position/rotation moves
+    • Lock/unlock
+    • Clear scene
+  
+  Undo Stack: 50 actions max (oldest discarded)
+  
+  Results:
+    • Scene reverts to previous state
+    • All objects restored to previous state
+    • Toast confirms: "Undo ↩" (cyan)
+  
+  Examples:
+    "Undo"
+    "Undo Last"
+    "Go Back"
+
+
+"Redo" or "Redo Last" or "Go Forward"
+  Redo last undone action.
+  
+  Requirements:
+    • Must have undone at least one action
+    • Redo stack cleared when new action performed
+  
+  Results:
+    • Scene moves forward one state
+    • Toast confirms: "Redo ↪" (cyan)
+  
+  Examples:
+    "Redo"
+    "Redo Last"
+    "Forward"
+
+
+VOICE COMMAND BEST PRACTICES
+─────────────────────────────
+
+✓ Speak clearly and at normal volume
+✓ Allow 0.5 second pause between commands
+✓ Avoid background noise (quiet environment ideal)
+✓ Keep browser window focused
+✓ Test voice once before relying on it
+✓ Use simpler command names if recognition fails
+✓ Combine with gestures for maximum control
+
+✗ Don't shout (saturates microphone)
+✗ Don't mumble or speak too quickly
+✗ Don't overlap commands (wait for recognition)
+✗ Don't expect 100% accuracy in noisy rooms
+✗ Don't use if browser doesn't support Web Speech
+
+FALLBACK IF VOICE UNAVAILABLE
+──────────────────────────────
+
+Voice Indicator shows "VOICE N/A" in these cases:
+  • Browser doesn't support Web Speech API
+  • Microphone denied access permission
+  • Running without audio input
+
+Workaround: Use gestures + UI buttons + keyboard shortcuts
+
+
+================================================================================
+4. UI CONTROLS & SHORTCUTS
+================================================================================
+
+HEADER BAR (Top)
+────────────────
+
+Logo [✦ GESTURE AR STUDIO]
+  • Visual branding
+  • Indicates application is running
+
+Tracking Pill [• TRACKING]
+  Green dot = Hands detected
+  Red dot = No camera access
+  Amber dot = Demo mode (no MediaPipe)
+  Shows real-time hand tracking status
+
+Physics Pill [⚛ PHYSICS]
+  • Click to toggle gravity/physics on/off
+  • Also available with [P] key
+  • Cyan border = Physics ON
+  • Default gray = Physics OFF
+
+Debug Pill [🔬 DEBUG]
+  • Click to toggle hand landmark visualization
+  • Also available with [G] key
+  • Shows hand skeleton + connection lines
+  • Shows confidence scores at each joint
+
+Action Buttons
+  [↩ UNDO] - Undo last action (also Ctrl+Z)
+  [↪ REDO] - Redo undone action (also Ctrl+Shift+Z)
+  [⌫ CLEAR] - Clear entire scene (no confirmation)
+  [⬇ EXPORT] - Download scene as JSON
+
+
+LEFT PANEL
+──────────
+
+Objects Section
+  8 buttons showing available shapes:
+    🧊 Cube (default)
+    ⚽ Sphere
+    🥫 Cylinder
+    🔺 Cone
+    🍩 Torus
+    ▲ Pyramid
+    💊 Capsule
+    ⬛ Plane
+
+  Selected shape shows cyan highlight
+  Click to change spawn shape
+  Objects spawn with selected shape + material + color
+
+Materials Section
+  8 buttons showing available materials:
+    ✨ Holographic (default, see-through with glow)
+    🪟 Glass (realistic transparency)
+    🔩 Metal (shiny/reflective)
+    💡 Neon (glowing edges, bright)
+    🪵 Wood (brown, natural texture)
+    🔵 Plastic (matte, colored)
+    🪞 Chrome (mirror-like silver)
+    ⬛ Carbon (dark, textured)
+
+  Selected material shows magenta highlight
+  Click to select material (applies to selected object if present)
+
+Color Section
+  7 color swatches (approved palette):
+    ◯ Cyan (#00F0FF)
+    ◯ Magenta (#FF007F)
+    ◯ Green (#00FF66)
+    ◯ Amber (#FF9900)
+    ◯ White (#FFFFFF)
+    ◯ Dark Gray (#1A1A24)
+    ◯ Purple (#9900FF)
+
+  Selected color shows white border + glow
+  Click to select color (applies to selected object if present)
+
+Size Section
+  Scale slider [0.2x to 3.0x]
+    • Controls spawn size for new objects
+    • Controls selected object size
+    • Displays current scale value
+
+Spawn Button
+  [＋ SPAWN OBJECT]
+    • Creates new object with current settings
+    • Spawns in front of camera with random spread
+    • Automatically selected
+    • Also triggered by [Space] key
+
+Scene Objects List
+  Shows all objects in scene with count:
+    🔒 = Locked object
+    ⬡ = Unlocked object
+    #ID = Unique object ID
+  Click any object to select it
+  Shows up to 6 objects (scrollable)
+
+
+RIGHT PANEL
+───────────
+
+Performance Metrics
+  FPS Bar (visual + numeric)
+    • Green ≥50 FPS (excellent)
+    • Amber 30-49 FPS (good)
+    • Red <30 FPS (poor)
+
+  Frame Time [--ms]
+    • Time to render one frame
+    • Lower is better
+    • Target: <16.67ms (60 FPS)
+
+  Objects [count]
+    • Total 3D objects in scene
+
+  Polygons [count]
+    • Total triangle count rendered
+    • Approximate (varies by shape)
+
+  Draw Calls [count]
+    • Total rendering batches
+    • Lower is better (fewer = more efficient)
+
+Hand Tracking Metrics
+  Hands Detected [0-2]
+    • Number of visible hands
+    • 0 = no hands in frame
+    • 2 = both hands visible
+
+  Landmarks [0-42]
+    • Total joint positions tracked
+    • 0 = no hands (21 per hand)
+
+  Tracking Confidence [0-100%]
+    • Accuracy of hand position tracking
+    • 95%+ = excellent
+    • <70% = poor lighting/angle
+
+Gesture Recognition Metrics
+  Current Gesture [NAME]
+    • Real-time gesture being recognized
+    • Updates as hands move
+
+  Gesture Confidence [0-100%]
+    • Accuracy of gesture identification
+    • Higher % = more stable gesture
+
+Physics Metrics
+  Gravity [ON/OFF]
+    • Gravity field status
+
+  Collisions [count]
+    • Active collision events this frame
+    • Shows physics system activity
+
+Selected Object Panel
+  Type [shape name]
+    • Type of selected object
+    • "None" if nothing selected
+
+  Material [material name]
+    • Material of selected object
+
+  Opacity Slider [10-100%]
+    • Object transparency control
+    • Lower % = more transparent
+    • 10% = mostly invisible
+
+  Emissive Slider [0-100%]
+    • Glow intensity for selected object
+    • Higher % = brighter glow
+    • Works best with neon/holographic
+
+  Action Buttons:
+    [🔒] Toggle Lock/Unlock selected
+    [⧉] Duplicate selected
+    [🗑] Delete selected
+
+
+TOOLBAR (Bottom-Left)
+─────────────────────
+
+Mode Selection Buttons:
+  [↖] SELECT MODE (key: 1)
+    • Default mode
+    • Hover hand to select objects
+    • Shows selection highlight
+
+  [✥] MOVE MODE (key: 2)
+    • Mouse drag moves selected object
+    • Useful for precision positioning
+
+  [↻] ROTATE MODE (key: 3)
+    • Mouse drag rotates selected object
+    • Auto-rotates when in this mode
+    • Cyan highlight when active
+
+  [⤡] SCALE MODE (key: 4)
+    • Mouse drag or wheel to resize
+    • Up/right = bigger, down/left = smaller
+    • Cyan highlight when active
+
+  [⬡] DEBUG MODE (key: G)
+    • Toggle hand landmark visualization
+    • Shows skeleton and joint positions
+    • Useful for diagnosing tracking issues
+
+
+GESTURE HUD (Bottom-Center)
+───────────────────────────
+
+Displays real-time gesture information:
+
+Gesture Icon
+  • Large emoji representing current gesture
+  • Updates in real-time as hands move
+
+Gesture Name [TEXT]
+  • "OPEN PALM", "PINCH", "FIST", etc.
+  • Displays which gesture is recognized
+
+Gesture Action [small text]
+  • Describes what the gesture does
+  • Example: "Grab & drag object"
+
+Confidence Bar [0-100%]
+  • Visual progress bar (cyan gradient)
+  • Shows numeric percentage
+  • Higher = more reliable gesture
+
+Confidence updates every frame (~60Hz)
+
+
+VOICE INDICATOR (Bottom-Right)
+──────────────────────────────
+
+Status Display:
+  [🎤] Voice Indicator
+  Animated bars showing voice level
+  Text showing status:
+    "VOICE OFF" = not listening
+    "LISTENING" = active, ready to hear commands
+
+Click or press [V] to toggle voice on/off
+
+Behavior:
+  • When OFF: gray, no animation
+  • When ON: amber border, animated bars pulse
+  • Glow effect when listening
+  • Click to enable (browser will request microphone)
+
+
+OBJECT TOOLTIP
+──────────────
+
+Appears when hovering over objects:
+
+Shows:
+  • Object type (CUBE, SPHERE, etc.)
+  • Object ID (#1, #2, etc.)
+  • Material type
+  • Position coordinates
+  • Scale value
+
+Disappears automatically after 2.5 seconds
+Only visible in SELECT mode
+
+
+SELECTION RING
+───────────────
+
+Cyan glowing border around selected object:
+  • Appears on screen as 2D outline
+  • Follows selected object as it moves
+  • Scales with object size
+  • Glow effect indicates selection
+  • Used for visual feedback
+
+
+TOAST NOTIFICATIONS
+────────────────────
+
+Small notifications appearing in top-right:
+
+Color Coding:
+  Cyan [====] — Actions completed (select, zoom)
+  Green [====] — Successful creations (spawn, duplicate)
+  Amber [====] — Warnings (locked, physics toggle)
+  Red [====] — Destructive actions (delete)
+
+Examples:
+  ✓ "Cube spawned ✦" (green)
+  ✓ "Object deleted" (red)
+  ✓ "Physics ON — gravity enabled" (amber)
+  ✓ "Grabbing cube" (cyan)
+
+Auto-dismiss: 2.8 seconds
+
+
+================================================================================
+5. OBJECT MANAGEMENT
+================================================================================
+
+SPAWNING OBJECTS
+────────────────
+
+Three Ways to Create Objects:
+
+Method 1: LEFT PANEL SPAWN BUTTON
+  1. Select shape from 8-button grid (left panel)
+  2. Select material (8 options)
+  3. Select color (7 options)
+  4. Adjust size slider
+  5. Click [＋ SPAWN OBJECT]
+  Result: New object appears in front of camera
+
+Method 2: KEYBOARD SHORTCUT
+  Press [Space] to spawn new object
+  Uses currently selected shape/material/color
+  Quick way to rapidly create objects
+
+Method 3: VOICE COMMAND
+  Say "Create [SHAPE]" or "Spawn [SHAPE]"
+  Examples: "Create Sphere", "Spawn Cylinder"
+  Can specify all shapes at once
+
+SPAWN BEHAVIOR
+──────────────
+
+When object spawns:
+  • Appears at camera center position
+  • Random horizontal spread (±1.5 units)
+  • Uses currently selected material & color
+  • Automatically selected (cyan outline)
+  • Bounces gently in idle animation
+  • Creates undo point
+
+Spawn Settings Are Persistent:
+  • Shape selection stays until changed
+  • Material selection stays until changed
+  • Color selection stays until changed
+  • Size selection stays until changed
+
+
+SELECTING OBJECTS
+─────────────────
+
+Four Selection Methods:
+
+Method 1: GESTURE — OPEN PALM
+  Point open hand at object
+  Nearest object within 0.8m selected automatically
+  Shows instant feedback
+
+Method 2: MOUSE CLICK
+  Click on 3D object in canvas
+  Performs raycast from camera
+  Selects hit object
+
+Method 3: SCENE LIST (LEFT PANEL)
+  Click object name in list
+  Selects object immediately
+  Shows all objects with IDs
+
+Method 4: SCENE HOTKEYS
+  Not currently mapped (use list)
+
+SELECTION FEEDBACK
+──────────────────
+
+When object selected:
+  • Cyan outline ring appears on screen
+  • Object shows in scene list with highlight
+  • Right panel updates with properties
+  • Scale slider shows object's current scale
+  • Material/color info displayed
+  • Opacity/emissive sliders update
+
+When nothing selected:
+  • No outline ring
+  • Right panel shows "Type: None"
+  • All sliders disabled
+
+
+MOVING OBJECTS
+──────────────
+
+Six Movement Methods:
+
+Method 1: GESTURE — PINCH & DRAG
+  1. Select object with Open Palm
+  2. Pinch thumb + index
+  3. Keep pinching while moving hand
+  4. Object follows hand smoothly
+  Result: 35% lerp blending for smooth follow
+
+Method 2: GESTURE — POINT & TELEPORT
+  1. Select object with Open Palm
+  2. Point index finger at target
+  3. Object snaps to pointed location
+  Result: 15% lerp (faster than pinch)
+
+Method 3: MOUSE DRAG (MOVE MODE)
+  1. Select object
+  2. Press [2] or click [✥] for MOVE MODE
+  3. Click and drag object in viewport
+  4. Drag left/right = X axis
+  5. Drag up/down = Y axis
+  Result: Precise positioning
+
+Method 4: TWO-HAND GRAB (ADVANCED)
+  1. Select object
+  2. Pinch with both hands (thumb-index on each)
+  3. Move hands together/apart to scale
+  4. Move hands to reposition
+  Result: Simultaneous position + scale
+
+Method 5: PHYSICS-BASED (if enabled)
+  1. Enable physics with [P] key or voice
+  2. Objects fall due to gravity
+  3. Click/pinch to grab mid-fall
+  4. Release to drop
+  Result: Realistic gravity simulation
+
+Method 6: VELOCITY-BASED (future)
+  Throw objects with flick gestures (coming soon)
+
+
+ROTATING OBJECTS
+────────────────
+
+Four Rotation Methods:
+
+Method 1: GESTURE — ROCK
+  • Make rock sign (index + pinky up)
+  • Selected object rotates continuously
+  • Rate: 0.04 radians/frame (continuous)
+  • No release needed
+
+Method 2: MOUSE DRAG (ROTATE MODE)
+  1. Press [3] or click [↻] for ROTATE MODE
+  2. Click and drag in viewport
+  3. Drag right = rotate around Y-axis
+  4. Drag down = rotate around X-axis
+  5. Mode auto-rotates selected when active
+  Result: Full 2-axis manual control
+
+Method 3: AUTO-ROTATE (idle)
+  • Unselected, unlocked objects slowly rotate
+  • Gentle animation while floating
+  • Rate: 0.003 radians/frame
+  • Stopped when object is selected
+
+Method 4: WRIST TWIST (future)
+  Coming in v2.0 with full 3-axis rotation
+
+ROTATION PROPERTIES
+─────────────────
+
+Rotation does NOT affect:
+  • Position (object stays in same spot)
+  • Size/scale
+  • Material/color
+  • Physics interactions
+
+Rotation is saved in undo/export
+
+
+SCALING OBJECTS
+───────────────
+
+Five Scaling Methods:
+
+Method 1: GESTURE — SPREAD
+  • Extend all fingers wide
+  • Object grows at 0.8% per frame
+  • Minimum: 0.2× (very tiny)
+  • Maximum: 8.0× (very large)
+
+Method 2: LEFT PANEL SLIDER
+  • "Size" slider range: 0.2× to 3.0×
+  • Drag slider left/right
+  • Updates selected object immediately
+  • Also changes spawn size for new objects
+
+Method 3: RIGHT PANEL OPACITY/SCALE
+  Only affects transparency, not size
+  (Use left panel for actual scale)
+
+Method 4: MOUSE SCROLL (SCALE MODE)
+  1. Press [4] or click [⤡] for SCALE MODE
+  2. Scroll mouse wheel
+  3. Scroll up = scale up
+  4. Scroll down = scale down
+  Result: Fine-grained control
+
+Method 5: MOUSE DRAG (SCALE MODE)
+  1. Press [4] for SCALE MODE
+  2. Drag diagonally
+  3. Drag up-right = scale up
+  4. Drag down-left = scale down
+  Result: Combined X+Y change
+
+SCALE CONSTRAINTS
+──────────────────
+Minimum: 0.1× (hidden, too small)
+Maximum: 8.0× (practical limit)
+Scale is per-axis (uniform scaling)
+Scale shows in right panel + left panel slider
+
+Scale affects:
+  ✓ Visual size
+  ✓ Collision radius (physics)
+  ✓ Shadow size
+  ✓ Selection ring size
+
+Scale DOES NOT affect:
+  ✗ Material properties
+  ✗ Rotation
+  ✗ Position
+
+
+DELETING OBJECTS
+────────────────
+
+Three Deletion Methods:
+
+Method 1: GESTURE — FIST
+  1. Select object with Open Palm
+  2. Make closed fist gesture
+  3. Hold for 1 second
+  Result: Object deleted, undo point created
+
+Method 2: RIGHT PANEL DELETE BUTTON
+  1. Select object
+  2. Click [🗑] button in right panel
+  Result: Immediate deletion
+
+Method 3: VOICE COMMAND
+  Say "Delete" or "Delete Selected Object"
+  Result: Selected object removed
+
+Method 4: KEYBOARD SHORTCUT
+  Press [Delete] or [Backspace] key
+  Result: Selected object deleted
+
+DELETION RESTRICTIONS
+──────────────────
+
+Locked Objects:
+  ✗ Cannot be deleted via gesture
+  ✗ Cannot be deleted via button
+  ✗ CAN be deleted via Ctrl+Z undo
+  ✗ Must unlock first: [🔒] button
+
+Deletion Behavior:
+  • Happens instantly (no confirmation)
+  • Creates undo point (use Ctrl+Z)
+  • Toast shows "Object deleted" (red)
+  • No selection remains
+
+Prevent Accidental Deletion:
+  1. Lock important objects (👍 gesture or button)
+  2. Use undo often (Ctrl+Z)
+  3. Export scene regularly
+
+
+DUPLICATING OBJECTS
+────────────────────
+
+Three Duplication Methods:
+
+Method 1: GESTURE — DOUBLE PINCH
+  1. Select object with Open Palm
+  2. Make pinch gesture (thumb-index touching)
+  3. Extend middle finger while pinching
+  4. Hold for 1.2 seconds
+  Result: Duplicate appears 0.6m to the right
+
+Method 2: RIGHT PANEL DUPLICATE BUTTON
+  1. Select object
+  2. Click [⧉] button in right panel
+  Result: Instant duplicate
+
+Method 3: VOICE COMMAND
+  Say "Duplicate" or "Copy"
+  Result: Object duplicated
+
+Method 4: KEYBOARD SHORTCUT
+  Press [Ctrl+D] or [Cmd+D]
+  Result: Quick duplicate
+
+DUPLICATION PROPERTIES
+────────────────────
+
+Duplicate inherits:
+  ✓ Shape type (cube → cube)
+  ✓ Material (glass → glass)
+  ✓ Color (cyan → cyan)
+  ✓ Scale (1.5× → 1.5×)
+  ✓ Rotation (45° → 45°)
+  ✓ All material properties (opacity, emissive)
+
+Duplicate does NOT inherit:
+  ✗ Position (offset 0.6m right)
+  ✗ Lock status (unlocked by default)
+  ✗ Selection (but is auto-selected)
+
+Duplication:
+  • Creates undo point
+  • Automatically selects duplicate
+  • Shows toast: "Object duplicated ⧉"
+  • Cooldown: 1.2 seconds
+
+
+LOCKING OBJECTS
+────────────────
+
+Two Lock Methods:
+
+Method 1: GESTURE — THUMBS UP
+  1. Select object
+  2. Make thumbs-up gesture (thumb pointing up)
+  3. Hold for 0.8 seconds
+  Result: Lock status toggles
+
+Method 2: RIGHT PANEL LOCK BUTTON
+  1. Select object
+  2. Click [🔒] button
+  Result: Lock status toggles
+
+Locked Object Behavior
+────────────────────
+
+Locked objects:
+  ✓ Cannot be dragged (pinch gesture fails)
+  ✓ Cannot be scaled (gesture & slider ignore)
+  ✓ Cannot be deleted (fist gesture fails, button blocked)
+  ✗ CAN still be rotated manually
+  ✗ CAN be viewed/selected
+  ✗ CAN be duplicated (duplicate is unlocked)
+  ✗ CAN be moved via teleport (for now)
+
+Visual Indicators:
+  🔒 Lock icon appears in scene list
+  Tooltip shows lock status
+  Toast confirms: "🔒 Object locked"
+
+Unlock Process:
+  1. Select locked object
+  2. Use thumbs-up gesture again (or button click)
+  Result: [🔓] Object unlocked
+
+
+BATCH OPERATIONS
+─────────────────
+
+Clear Entire Scene:
+  • Header button [⌫ CLEAR]
+  • Voice: "Clear Scene"
+  • All objects deleted at once
+  • Creates undo point
+  • No confirmation (be careful!)
+
+Select All (future v2.0):
+  Not yet implemented
+  Planned: Group objects together
+
+
+================================================================================
+6. MATERIAL SYSTEM
+================================================================================
+
+MATERIAL PROPERTIES
+────────────────────
+
+Each material type has unique visual characteristics:
+
+HOLOGRAPHIC (Default) ✨
+  Description: Translucent with glowing edges
+  Color: Tinted to match object color
+  Opacity: 75% (25% transparent)
+  Glow: Emissive intensity 40%
+  Wireframe: Yes, subtle edges
+  Best For: Futuristic, AR-style objects
+  Performance: Medium
+  
+  Visual Effect:
+    • See-through but visible
+    • Rainbow-like shimmer edges
+    • Glow effect, especially in dark areas
+    • Wireframe traces around geometry
+  
+  Perfect For: Title objects, hero pieces, main focus
+  
+  Real-World Analogy: Tinted plexiglass with inner glow
+
+
+GLASS 🪟
+  Description: Realistic optical glass
+  Color: Nearly colorless (white with tint)
+  Opacity: 18% (82% transparent)
+  Special: Full transmission/refraction physics
+  Roughness: Very low (crystal clear)
+  Best For: Windows, transparent containers, lenses
+  Performance: High (complex rendering)
+  
+  Visual Effect:
+    • Crystal clear
+    • Realistic light refraction
+    • Reflections visible
+    • Barely visible unless light hits it
+  
+  Transparency Challenge:
+    • 18% base opacity
+    • Needs backlighting to show up
+    • Looks almost invisible in some angles
+  
+  Real-World Analogy: Polished window glass
+  
+  Pro Tip: Place behind other objects to see effect better
+
+
+METAL 🔩
+  Description: Brushed steel/polished metal
+  Color: Tinted (cyan = bright cyan metal, etc.)
+  Metalness: 95% (nearly 100% reflective)
+  Roughness: 8% (some micro-texture)
+  Shine: Very high, mirror-like
+  Best For: Industrial, tech, premium feel
+  Performance: Medium-high
+  
+  Visual Effect:
+    • Highly reflective
+    • Color visible through reflections
+    • Realistic light interaction
+    • Sharp highlights
+  
+  Finish: Brushed steel (not mirror, not matte)
+  
+  Real-World Analogy: Aluminum or steel component
+
+
+NEON 💡
+  Description: Glowing neon tube effect
+  Color: Bright, vibrant (matches object color)
+  Glow: 120% emissive intensity (very bright)
+  Opacity: 90% (mostly opaque)
+  Special: Self-illuminating
+  Best For: Signs, accent pieces, sci-fi elements
+  Performance: Low (simple, optimized)
+  
+  Visual Effect:
+    • Glows in dark areas
+    • Very visible even against bright backgrounds
+    • Color is very saturated/vibrant
+    • Sharp edges with glow halo
+  
+  Brightness: One of the brightest materials
+  
+  Real-World Analogy: Neon tube lighting
+  
+  Pro Tip: Works great with Cyan and Magenta colors
+
+
+WOOD 🪵
+  Description: Natural wood texture
+  Color: Brown (fixed, not tinted by color choice)
+  Texture: Rough, organic grain pattern
+  Roughness: 85% (matte, no shine)
+  Best For: Organic, natural-looking, warm feel
+  Performance: High
+  
+  Visual Effect:
+    • Warm brown tone
+    • Dull, non-reflective surface
+    • Visible grain texture
+    • Natural lighting response
+  
+  Note: Color selection IGNORED for wood
+  (Always appears as brown wood)
+  
+  Real-World Analogy: Oak or pine lumber
+  
+  Use Case: Forest scenes, furniture, natural themes
+
+
+PLASTIC 🔵
+  Description: Glossy plastic polymer
+  Color: Tinted to match object color
+  Roughness: 45% (semi-gloss)
+  Metalness: 5% (slight metallic edge)
+  Shine: Medium, some reflections
+  Best For: Consumer products, toys, colorful objects
+  Performance: High
+  
+  Visual Effect:
+    • Smooth, slightly shiny surface
+    • Good color saturation
+    • Visible reflections but not mirror-like
+    • Bright, clean appearance
+  
+  Real-World Analogy: ABS plastic or injection-molded parts
+  
+  Color Works: Yes, all colors visible clearly
+
+
+CHROME 🪞
+  Description: Mirror-polished chrome
+  Color: Neutral silver (fixed, ~0xcccccc)
+  Metalness: 100% (fully reflective)
+  Roughness: 2% (super smooth, mirror-like)
+  Special: Ultra-high reflectivity
+  Best For: Mirrors, reflective surfaces, high-end products
+  Performance: Medium-high
+  
+  Visual Effect:
+    • Extremely shiny, nearly mirror finish
+    • Reflects entire environment
+    • Very bright highlights
+    • Almost looks wet/liquid
+  
+  Note: Color selection IGNORED for chrome
+  (Always appears as silver)
+  
+  Real-World Analogy: Chrome-plated metal
+  
+  Mirror Effect: Nearly 100% reflective
+
+
+CARBON ⬛
+  Description: Carbon fiber composite
+  Color: Dark base, overlaid with weave pattern
+  Metalness: 40% (semi-metallic)
+  Roughness: 70% (textured, not smooth)
+  Special: Visible weave pattern
+  Best For: Performance, technical, high-tech feel
+  Performance: Medium
+  
+  Visual Effect:
+    • Dark gray/black with texture
+    • Subtle weave pattern visible
+    • Not fully reflective
+    • Premium, technical appearance
+  
+  Real-World Analogy: Carbon fiber reinforced polymer (CFRP)
+  
+  Note: Color selection IGNORED for carbon
+  (Always appears as dark gray with weave)
+  
+  Best Pairing: Used on high-performance objects
+
+
+MATERIAL COMPARISON CHART
+──────────────────────────
+
+                  Opacity  Shine  Glow   Texture  Performance
+Holographic       75%      60%    40%    Yes      Medium
+Glass             18%      70%    0%     No       High
+Metal             100%     95%    0%     No       High
+Neon              90%      20%    120%   No       Low
+Wood              100%     10%    0%     Yes      High
+Plastic           100%     50%    0%     No       High
+Chrome            100%     100%   0%     No       Med-High
+Carbon            100%     30%    0%     Yes      Medium
+
+
+MATERIAL SELECTION
+──────────────────
+
+Method 1: LEFT PANEL
+  • Click material button in left panel
+  • Cyan highlight shows selection
+  • Used for NEW objects spawned
+
+Method 2: SELECT & APPLY
+  1. Click material button
+  2. If object selected, applies to it
+  3. If no object, just changes spawn material
+
+Method 3: VOICE COMMAND
+  "Glass" → Apply glass
+  "Make it Metal" → Apply metal
+  "Chrome" → Apply chrome
+  "Neon" → Apply neon
+
+Method 4: FUTURE API (v2.0)
+  Batch material application
+  Material presets/themes
+
+
+MATERIAL SWAPPING
+──────────────────
+
+Change Material of Selected Object:
+  1. Select object (gesture/click/list)
+  2. Click material button
+  3. Material changes instantly
+  4. Creates undo point
+
+Material Persistence:
+  ✓ Saved in undo/export
+  ✓ Persists when duplicated
+  ✓ Not affected by color changes
+  ✓ Not affected by scale/rotation
+
+Material + Color Interaction:
+  • Most materials: color tint applied
+  • Wood: color ignored (always brown)
+  • Chrome: color ignored (always silver)
+  • Carbon: color ignored (always dark gray)
+
+Check Right Panel:
+  • Shows material of selected object
+  • Updates immediately on change
+
+
+================================================================================
+7. PHYSICS ENGINE
+================================================================================
+
+PHYSICS SYSTEM OVERVIEW
+─────────────────────────
+
+When enabled, the physics engine simulates:
+  ✓ Gravity (constant downward acceleration)
+  ✓ Velocity (momentum in all axes)
+  ✓ Floor collision (with restitution)
+  ✓ Object-to-object collisions (elastic)
+  ✓ Friction (on surface contact)
+  ✓ Damping (drag in air)
+
+GRAVITY
+──────
+
+Gravity Constant: -0.003 units/frame²
+Direction: Downward (negative Y-axis)
+Effect: Constant acceleration
+
+Activation:
+  • Toggle with [P] key
+  • Use voice: "Physics On"
+  • Click Physics pill in header
+  • UI shows current status (ON/OFF, green/amber)
+
+What Falls:
+  ✓ All unselected objects
+  ✓ Unlocked objects
+  ✗ Grabbed objects (locked to hand)
+  ✗ Selected objects (in select mode only)
+
+Terminal Velocity:
+  Objects accelerate infinitely downward
+  No terminal velocity cap currently
+  (Can freeze off-screen, use CLEAR to reset)
+
+
+FLOOR COLLISION
+────────────────
+
+Virtual Floor:
+  • Located at Y = -2.5 units
+  • Invisible plane (shadow-only visual)
+  • 30×30 unit surface area
+  • Surrounds entire play area
+
+Collision Behavior:
+  When object reaches floor:
+    1. Position clamps to floor surface
+    2. Y-velocity reverses
+    3. Restitution applied (bounce): -45% (40% bounce)
+    4. Friction applied: ×0.88 (12% reduction)
+
+Bounce Characteristics:
+  • First bounce: 40% of incoming velocity
+  • Each subsequent bounce: 40% of previous
+  • After ~3-4 bounces: settles
+
+Friction on Floor:
+  • X-velocity damped 12% per frame
+  • Z-velocity damped 12% per frame
+  • Reduces sliding distance significantly
+  • Objects settle quickly
+
+Example Fall Sequence:
+  1. Object falls 5 units
+  2. Hits floor, bounces up 2 units (40%)
+  3. Falls again, bounces 0.8 units (40% of 2)
+  4. Falls again, bounces 0.3 units
+  5. Settles on floor
+
+
+OBJECT-TO-OBJECT COLLISIONS
+──────────────────────────────
+
+Detection Method: Sphere-sphere approximation
+  • Uses object center + scale radius
+  • Collision distance: (scale1 + scale2) × 0.55
+
+Collision Response:
+  1. Detects overlap
+  2. Separates objects by overlap distance
+  3. Exchanges velocity components
+  4. Applies elastic collision physics
+
+Collision Damping:
+  • Relative velocity × 0.4
+  • Inelastic collision (energy loss)
+  • Prevents endless bouncing
+
+Visible Feedback:
+  • Right panel shows collision count per frame
+  • Useful for diagnosing collisions
+
+Example Collision:
+  Two objects moving toward each other
+  → Collide → Bounce apart → Lose 60% energy → Settle
+
+
+VELOCITY & MOMENTUM
+─────────────────
+
+Each object has velocity in 3 axes:
+  velocity = { x, y, z }
+
+Velocity Applications:
+  • Updated position every frame
+  • Affects collision responses
+  • Reset when grabbed (pinch gesture)
+  • Persists when released
+
+Damping (Air Resistance):
+  • X-velocity ×0.98 per frame (2% loss)
+  • Y-velocity ×0.99 per frame (1% loss)
+  • Z-velocity ×0.98 per frame (2% loss)
+  • Slows all motion gradually
+
+Throwing Physics (Future):
+  When released from pinch:
+  • Current velocity carried forward
+  • Allows throwing objects
+  • Coming in v2.0
+
+
+GRABBING & RELEASING
+──────────────────
+
+Grab Mechanics:
+  1. Gesture: Pinch thumb + index
+  2. Nearest object within 1.2m selected
+  3. Velocity set to zero (no inertia)
+  4. Object locked to hand position
+  5. Follows hand with 35% lerp
+
+During Grab:
+  ✗ Gravity disabled for grabbed object
+  ✗ Collisions disabled for grabbed object
+  ✗ Velocity frozen at {0,0,0}
+
+Release Mechanics:
+  1. Stop pinching (hand opens)
+  2. Object released at last position
+  3. Velocity resets to {0,0,0}
+  4. Falls again if gravity enabled
+
+Implications:
+  • Cannot throw objects yet
+  • Objects don't maintain momentum
+  • Must release before object hits ground
+  • Future: velocity transfer on release
+
+
+PHYSICS TOGGLE
+────────────────
+
+Enable Physics:
+  Method 1: Press [P] key
+  Method 2: Voice: "Physics On"
+  Method 3: Click Physics pill in header
+  
+  Effect:
+    • Gravity field activates
+    • Floor becomes active
+    • Collision system enables
+    • Objects begin falling
+    • Metrics show collisions
+
+Disable Physics:
+  Method 1: Press [P] key
+  Method 2: Voice: "Physics Off"
+  Method 3: Click Physics pill again
+  
+  Effect:
+    • Gravity field deactivates
+    • Objects freeze in place
+    • No more falling
+    • Gentle idle animation resumes
+    • Metrics show 0 collisions
+
+Status Indicator:
+  Right panel "Gravity" shows:
+    ✓ ON (green) = Physics active
+    ✓ OFF (amber) = Physics disabled
+
+Floor Indicator:
+  Bottom of screen shows when physics ON:
+    ⬇ VIRTUAL FLOOR DETECTED
+
+
+PHYSICS LIMITATIONS & WORKAROUNDS
+───────────────────────────────────
+
+Current Limitations:
+  ✗ No rigid body dynamics library (custom simple physics)
+  ✗ Sphere-sphere collision only (no mesh collisions)
+  ✗ No momentum transfer on release (yet)
+  ✗ No angular (rotational) physics
+  ✗ No constraints/joints
+  ✗ No convex hull collision
+
+Workarounds:
+  • Use SELECT mode with mouse to position precisely
+  • Lock important objects to prevent accidents
+  • Use CLEAR button to reset runaway objects
+  • Switch physics off when not needed (saves performance)
+
+Future Improvements (v2.0):
+  ✓ Cannon.js physics engine integration
+  ✓ Full rigid body dynamics
+  ✓ Mesh collision detection
+  ✓ Momentum transfer (throwing)
+  ✓ Angular velocity (spinning objects)
+  ✓ Constraints and joints
+
+
+PHYSICS PERFORMANCE IMPACT
+───────────────────────────
+
+Physics Enabled:
+  • Frame time: +2-4ms per object
+  • 20 objects: ~40-80ms additional overhead
+  • Complexity: O(n²) for collision checking
+
+Physics Disabled:
+  • Minimal overhead (just gravity calculation)
+  • Faster rendering
+  • Recommended for 50+ objects
+
+Performance Tips:
+  ✓ Disable physics when not needed
+  ✓ Keep object count under 30 for smooth physics
+  ✓ Lock static objects to skip physics
+  ✓ Use CLEAR to remove old objects
+  ✓ Monitor FPS in right panel
+
+
+================================================================================
+8. PERFORMANCE & ANALYTICS
+================================================================================
+
+REAL-TIME METRICS
+───────────────────
+
+FPS (Frames Per Second)
+  ✓ Measured: Last 60 frames average
+  ✓ Target: 60 FPS (1 frame = 16.67ms)
+  ✓ Display: Number + color-coded bar
+  ✓ Update Rate: Every frame (~60Hz)
+
+  Color Coding:
+    Green: ≥50 FPS (excellent, smooth)
+    Amber: 30-49 FPS (acceptable, slightly choppy)
+    Red: <30 FPS (poor, very choppy)
+
+Frame Time
+  ✓ Time to render one frame (milliseconds)
+  ✓ Lower is better
+  ✓ Target: <16.67ms (for 60 FPS)
+  ✓ Shows: 0.1ms precision
+
+  Interpretation:
+    <5ms    = GPU-bound, limited by rendering
+    5-10ms  = Balanced
+    10-15ms = CPU-bound, limited by logic
+    >16.67ms = Dropping frames (< 60 FPS)
+
+Objects
+  ✓ Current count of 3D objects in scene
+  ✓ Updates: When object spawned/deleted
+  ✓ Range: 0-1000+ (no hard limit)
+
+Polygons
+  ✓ Total triangle count rendered
+  ✓ Approximate (varies by shape)
+  ✓ Updates: When geometry changes
+
+  Polygon Counts by Shape:
+    Cube:     12 triangles (6 faces × 2)
+    Sphere:   2048 triangles (32×32 segments)
+    Cylinder: 256 triangles
+    Cone:     128 triangles
+    Torus:    960 triangles
+    Pyramid:  8 triangles
+    Capsule:  384 triangles
+    Plane:    8 triangles
+
+Draw Calls
+  ✓ WebGL rendering batches
+  ✓ Lower is better (fewer = more efficient)
+  ✓ Typical: 10-50 calls per frame
+
+  Optimization:
+    • Three.js batches similar materials
+    • Each material = 1+ draw calls
+    • Instancing reduces draw calls
+    • Currently no advanced batching
+
+HAND TRACKING METRICS
+─────────────────────
+
+Hands Detected
+  ✓ Count of visible hands: 0, 1, or 2
+  ✓ Updates: Every frame
+  ✓ Status:
+    0 = No hands visible (camera empty)
+    1 = One hand tracked (mono mode)
+    2 = Both hands visible (stereo mode)
+
+Landmarks
+  ✓ Total joint positions tracked
+  ✓ Per hand: 21 landmarks
+  ✓ Formula: Hands × 21
+  ✓ Examples:
+    0 hands = 0 landmarks
+    1 hand = 21 landmarks
+    2 hands = 42 landmarks
+
+Tracking Confidence
+  ✓ Accuracy of hand position tracking
+  ✓ Range: 0-100%
+  ✓ Shows: Combined confidence across all joints
+
+  Confidence Breakdown:
+    95-100% = Excellent tracking (studio lighting)
+    80-94%  = Good tracking (normal lighting)
+    60-79%  = Fair tracking (dim or angled)
+    <60%    = Poor tracking (bad conditions)
+
+  Improving Confidence:
+    ✓ Better lighting (avoid shadows)
+    ✓ Face camera directly
+    ✓ Keep hands 0.5-1.5m from camera
+    ✓ Use neutral background
+    ✓ Avoid reflective backgrounds
+
+GESTURE RECOGNITION METRICS
+────────────────────────────
+
+Current Gesture
+  ✓ Name of recognized gesture
+  ✓ Updates: Every frame
+  ✓ Shows: "NONE" when no gesture
+  ✓ Examples: "OPEN PALM", "PINCH", "FIST"
+
+Gesture Confidence
+  ✓ Accuracy of gesture identification
+  ✓ Range: 0-100%
+  ✓ Updates: Every frame
+  ✓ Based on hand pose likelihood
+
+  Gesture-Specific Baselines:
+    OPEN PALM: 95% (very reliable)
+    PINCH: 90% (reliable)
+    FIST: 92% (reliable)
+    POINT: 88% (fairly reliable)
+    ROCK: 83% (good)
+    SPREAD: 85% (good)
+    THUMBS UP: 87% (good)
+    DOUBLE PINCH: 88% (good)
+
+  Reasons Confidence Drops:
+    • Hand partially out of frame
+    • Ambiguous hand pose
+    • Lighting issues
+    • Hand moving too fast
+    • Similar gestures (rock vs thumbs)
+
+Gesture Debugging:
+  Press [G] to enable debug overlay
+  Shows real-time skeleton with:
+    • Joint positions (dots)
+    • Bone connections (lines)
+    • Landmark coordinates
+    • Confidence scores per joint
+
+
+PHYSICS METRICS
+────────────────
+
+Gravity Status
+  ✓ ON = Physics system active
+  ✓ OFF = Physics system disabled
+
+Collision Count
+  ✓ Active collisions this frame
+  ✓ Updates: Every frame during physics step
+  ✓ Range: 0-N (N = object count)
+
+  Interpretation:
+    0 collisions = No physics interactions
+    1-5 collisions = Normal scene (1-2 objects moving)
+    5-20 collisions = Complex interactions (many moving objects)
+    >20 collisions = High activity (possible performance issue)
+
+  Collision Examples:
+    Falling object + floor = 1 collision/frame until settles
+    Two objects bumping = 1 collision when touching
+    Multiple falling objects = 1 per object-floor contact
+
+
+SELECTED OBJECT METRICS
+──────────────────────
+
+Type
+  ✓ Shape type of selected object
+  ✓ Shows: "None" when nothing selected
+  ✓ Examples: "CUBE", "SPHERE", "CYLINDER"
+
+Material
+  ✓ Material type of selected object
+  ✓ Shows: "--" when nothing selected
+  ✓ Examples: "HOLOGRAPHIC", "GLASS", "NEON"
+
+Opacity Slider
+  ✓ Transparency level: 10-100%
+  ✓ Default: 100% (fully opaque)
+  ✓ Affects: Rendering blending only
+  ✓ Note: 10-20% nearly invisible
+
+Emissive Slider
+  ✓ Self-glow intensity: 0-100%
+  ✓ Default: 0% (no glow)
+  ✓ Works best with: Neon, Holographic, Metal
+  ✓ Effect: Makes object appear lit from within
+
+Lock Status
+  ✓ Shows lock icon if locked: 🔒
+  ✓ Prevents: Drag, scale, delete
+  ✓ Allows: Rotation, view, duplicate
+
+
+PERFORMANCE OPTIMIZATION TIPS
+───────────────────────────────
+
+Monitor FPS:
+  • Keep right panel visible while working
+  • Watch for FPS drops when spawning objects
+  • Target: Maintain 50+ FPS on most systems
+
+Object Limits:
+  Recommended: <30 objects for smooth physics
+  Comfortable: <100 objects for basic use
+  Maximum: <500 objects before severe slowdown
+
+Quality vs Performance:
+  Reduce object count to improve FPS
+  Disable physics when not needed
+  Use simpler shapes (cube < sphere < torus)
+  Reduce polygon count (fewer segments)
+
+GPU Optimization:
+  • Lower polygon count improves GPU
+  • Fewer draw calls improve GPU
+  • Larger objects are faster to render
+  • Transparent objects are slower (sorting)
+
+CPU Optimization:
+  • Physics scales O(n²), disable when possible
+  • Hand tracking: constant ~10-15ms
+  • Gesture classification: <1ms
+  • Minimize object count
+
+Browser Optimization:
+  • Close other tabs (context switching)
+  • Update browser to latest version
+  • Disable browser extensions (ad blockers, etc.)
+  • Use Chrome/Edge (better WebGL support)
+
+
+PERFORMANCE BOTTLENECKS
+──────────────────────
+
+Common Causes of FPS Drops:
+
+1. Too Many Objects
+   • Symptom: Steady FPS drop when spawning
+   • Fix: Delete unused objects, clear scene
+   • Threshold: >50-100 objects with physics
+
+2. Physics Enabled
+   • Symptom: FPS drops with many colliding objects
+   • Fix: Disable physics, or move objects to floor
+   • Cost: ~2-4ms per object
+
+3. Transparent Materials
+   • Symptom: FPS drops with glass/holographic
+   • Fix: Use opaque materials (plastic, metal)
+   • Issue: Transparent requires depth sorting
+
+4. Complex Shapes
+   • Symptom: Sphere slower than cube
+   • Fix: Use cubes where possible
+   • Polygon difference: 12 (cube) vs 2048 (sphere)
+
+5. Hand Tracking
+   • Symptom: Constant 10-15ms baseline cost
+   • Fix: Disable debug overlay (G key)
+   • Note: Unavoidable (required for gestures)
+
+6. Old Hardware
+   • Symptom: FPS consistently <30
+   • Fix: Reduce polygon count, fewer objects
+   • Check: Can try lower browser rendering scale
+
+PERFORMANCE PROFILING
+──────────────────────
+
+Browser DevTools:
+  Press [F12] to open developer tools
+  Go to "Performance" tab
+  Click record, interact, stop recording
+  Analyze flame graph for bottlenecks
+
+What to Look For:
+  • "Render" blocking main thread
+  • "Layout" thrashing (recalculation)
+  • "Script" running long tasks (>16ms)
+  • High memory usage
+
+Three.js WebGL Renderer Info:
+  APP.renderer.info shows in console:
+    • Memory usage (textures, geometries)
+    • Call counts (draw calls, triangles)
+    • Program usage (shaders compiled)
+
+
+================================================================================
+9. ADVANCED FEATURES
+================================================================================
+
+UNDO / REDO SYSTEM
+──────────────────
+
+Undo Stack: Last 50 actions
+Redo Stack: Cleared on new action
+
+Supported Actions:
+  ✓ Spawn object
+  ✓ Delete object
+  ✓ Duplicate object
+  ✓ Color/material change
+  ✓ Scale change
+  ✓ Position change
+  ✓ Rotation change
+  ✓ Lock/unlock
+  ✓ Clear scene
+
+Accessing Undo/Redo:
+
+  Method 1: Keyboard Shortcuts
+    [Ctrl+Z] (Windows) or [Cmd+Z] (Mac) = Undo
+    [Ctrl+Y] (Windows) or [Cmd+Shift+Z] (Mac) = Redo
+    [Shift+Ctrl+Z] = Redo (alternate)
+
+  Method 2: Header Buttons
+    [↩ UNDO] button in top bar
+    [↪ REDO] button in top bar
+
+  Method 3: Voice Commands
+    "Undo" or "Undo Last"
+    "Redo" or "Redo Last"
+
+Undo Limitations:
+  ✗ Cannot undo before first action
+  ✗ Cannot redo if new action taken
+  ✗ No named snapshots (yet)
+  ✗ No branching undo (v2.0 feature)
+
+
+DEBUG MODE
+──────────
+
+Toggle Debug Overlay:
+  [G] key, or
+  Click [🔬] button in toolbar, or
+  Voice: "Debug" (not recommended)
+
+Debug Display Shows:
+  ✓ Hand skeleton with 21 joints per hand
+  ✓ Bone connections (white lines)
+  ✓ Joint positions (cyan dots)
+  ✓ Tracking confidence per joint
+  ✓ Gesture name + confidence
+
+When to Use Debug:
+  • Gestures not triggering properly
+  • Want to see hand tracking accuracy
+  • Diagnosing lighting issues
+  • Testing gesture recognition
+
+Debug Overlay Impact:
+  • Minimal FPS impact
+  • Only renders when active
+  • Canvas 2D overlay (efficient)
+
+Debug Tips:
+  • Enable in good lighting
+  • Look for joints jumping around (bad tracking)
+  • Check that all 21 joints are detected
+  • Confidence % shows per-joint reliability
+
+
+SCENE EXPORT / IMPORT
+──────────────────────
+
+EXPORT Functionality:
+
+Current Status: ✓ Fully implemented
+Format: JSON (human-readable)
+Size: ~1KB per object
+
+What Gets Exported:
+  ✓ Scene metadata (version, timestamp)
+  ✓ All objects in scene
+  ✓ Per-object properties:
+    - Type (cube, sphere, etc.)
+    - Material (glass, metal, etc.)
+    - Color (hex code)
+    - Position (x, y, z)
+    - Rotation (x, y, z)
+    - Scale (x, y, z)
+    - Lock status
+
+How to Export:
+
+  Method 1: Header Button
+    Click [⬇ EXPORT] in top bar
+
+  Method 2: Voice Command
+    "Export Scene" or "Save Scene"
+
+  Method 3: Keyboard (future)
+    Not currently mapped
+
+Export Result:
+  File downloaded: "gesture-ar-scene.json"
+  Saved to Downloads folder
+  Can be backed up or shared
+
+IMPORT Functionality:
+
+Current Status: ✗ Not yet implemented
+Planned: v2.0 release
+
+When Available:
+  • File picker to choose JSON
+  • Validates scene format
+  • Reconstructs all objects
+  • Maintains all properties
+
+Manual Import Workaround:
+  Currently you can:
+  1. Keep export file as backup
+  2. Export periodically
+  3. Manually recreate scenes if needed
+
+
+Example Export File:
+```json
+{
+  "version": "1.0",
+  "timestamp": "2026-06-15T10:30:00.000Z",
+  "objects": [
+    {
+      "id": 1,
+      "type": "cube",
+      "material": "glass",
+      "color": "#00F0FF",
+      "locked": false,
+      "position": [0.5, 0.2, -1.3],
+      "rotation": [0, 0.785, 0],
+      "scale": [1.5, 1.5, 1.5]
+    },
+    {
+      "id": 2,
+      "type": "sphere",
+      "material": "neon",
+      "color": "#FF007F",
+      "locked": true,
+      "position": [-1.2, -0.5, 0.8],
+      "rotation": [0, 0, 0],
+      "scale": [0.8, 0.8, 0.8]
+    }
+  ]
+}
+```
+
+
+CUSTOM WORKSPACE (Future v2.0)
+───────────────────────────────
+
+Planned Features:
+  ✓ Save custom workspaces
+  ✓ Load workspaces by name
+  ✓ Quick presets (minimalist, complex, demo)
+  ✓ Workspace thumbnails
+  ✓ Cloud sync (optional)
+
+
+VOICE COMMAND ADVANCED
+─────────────────────
+
+Voice Settings (future):
+  ✓ Language selection
+  ✓ Microphone selection
+  ✓ Confidence threshold
+  ✓ Command vocabulary customization
+
+Current Microphone:
+  • Browser default
+  • Manual selection via browser settings
+  • Quality depends on hardware
+
+Voice Tips:
+  ✓ Speak clearly and distinctly
+  ✓ Avoid background noise
+  ✓ Normal volume (not too loud)
+  ✓ Pause between commands
+  ✓ Consistent accent helps
+
+
+KEYBOARD SHORTCUT REFERENCE
+──────────────────────────
+
+Full Shortcut List (see Section 11)
+
+
+MOUSE INTERACTION ADVANCED
+──────────────────────────
+
+Three-Button Operations:
+  Left Click: Select object (raycast)
+  Right Click: Context menu (future v2.0)
+  Middle Click: Pan camera (future v2.0)
+
+Modifier Keys:
+  Shift + Click: Multi-select (future v2.0)
+  Ctrl + Click: Deselect
+  Alt + Drag: Free camera (future v2.0)
+
+Current Implementation:
+  ✓ Left click + drag for move/rotate/scale
+  ✓ Scroll wheel for scale (scale mode)
+  ✓ Double-click for duplicate
+  ✓ Delete/Backspace to delete
+
+
+PERFORMANCE RECORDING & SHARING
+─────────────────────────────────
+
+For Sharing Performance Data:
+  1. Screenshot metrics panel
+  2. Note FPS, frame time, object count
+  3. Share when reporting bugs
+  4. Helps developers optimize
+
+Example Performance Report:
+  "FPS: 58, Frame Time: 17.2ms, Objects: 24, Polygons: 8932"
+
+
+================================================================================
+10. TROUBLESHOOTING
+================================================================================
+
+CAMERA ACCESS ISSUES
+──────────────────
+
+Problem: "Camera access denied" message
+Symptoms:
+  • Header shows red dot
+  • "NO CAMERA" text
+  • No video feed visible
+
+Solutions:
+  1. Check Browser Permissions:
+     • Click lock icon in address bar
+     • Find "Camera" permission
+     • Select "Allow"
+     • Refresh page [F5]
+
+  2. Check Operating System:
+     • Windows: Settings > Privacy > Camera
+     • Mac: System Preferences > Security > Camera
+     • Linux: N/A (usually auto)
+     • Grant browser permission
+
+  3. Try Different Browser:
+     • Chrome (best support)
+     • Edge (good support)
+     • Firefox (good support)
+     • Safari (good support)
+
+  4. Check Hardware:
+     • Webcam working? (test in other apps)
+     • USB connected? (if external)
+     • Drivers updated? (Windows)
+
+  5. Reboot Computer:
+     • Sometimes fixes permission issues
+
+Problem: Camera video is upside-down
+  Solution: Browser setting for camera flip
+  (Usually handled automatically)
+
+Problem: Camera very dark
+  Solution: Check lighting in room
+  • Move closer to light source
+  • Open curtains/blinds
+  • Use desk lamp
+
+
+HAND TRACKING ISSUES
+──────────────────
+
+Problem: "0 hands detected" when hands visible
+Symptoms:
+  • Header shows "0 HANDS"
+  • Gestures not triggering
+  • Hand landmarks not visible
+
+Causes & Solutions:
+
+1. Lighting Too Dim
+   ✓ Increase room lighting
+   ✓ Move to well-lit area
+   ✓ Use desk lamp
+   ✓ Natural light preferred
+
+2. Hand Out of Frame
+   ✓ Move hand into camera view
+   ✓ Ensure hand completely visible
+   ✓ Try moving closer to camera
+
+3. Tracking Confidence Low
+   ✓ Check confidence % in right panel
+   ✓ <70% = poor conditions
+   ✓ Improve lighting or angle
+
+4. Hand Partially Hidden
+   ✓ Show full hand (all fingers)
+   ✓ Avoid covering with clothing
+   ✓ Keep hand away from body
+
+5. Camera Angle Bad
+   ✓ Point camera at hands
+   ✓ Avoid extreme angles
+   ✓ Front-facing camera best
+
+6. Enable Debug Mode
+   ✓ Press [G] to see landmarks
+   ✓ If no dots appear = no detection
+   ✓ Try different lighting
+
+7. MediaPipe Load Failed
+   ✓ Check console for errors [F12]
+   ✓ Internet connection needed (CDN loading)
+   ✓ Refresh page
+   ✓ Try different browser
+
+
+GESTURE RECOGNITION ISSUES
+───────────────────────────
+
+Problem: Gesture triggering wrong action
+Symptoms:
+  • "PINCH" shows but action is different
+  • Confidence seems high but wrong gesture
+  • Inconsistent behavior
+
+Causes:
+  • Hand pose ambiguous
+  • Finger positions unclear
+  • Similar gestures confused (rock vs peace)
+
+Solutions:
+  1. Exaggerate Gesture
+     • Make gesture more extreme
+     • Separate fingers more clearly
+     • Hold hand steady
+
+  2. Check Confidence
+     • If <80%, gesture unreliable
+     • Try different angle
+     • Improve lighting
+
+  3. Enable Debug Mode [G]
+     • See hand skeleton
+     • Check if joints are tracked
+     • Adjust gesture pose
+
+  4. Use Voice Command Instead
+     • More reliable for important actions
+     • Say "Delete" instead of fist
+     • Say "Duplicate" instead of double pinch
+
+Problem: Gesture takes too long to trigger
+Symptoms:
+  • 1-2 second delay before action
+  • Action doesn't happen first try
+
+Causes:
+  • Debouncing (intentional, prevents accidents)
+  • Gesture held < 4 frames
+  • Hand not steady enough
+
+Solutions:
+  ✓ Hold gesture steady for 1+ second
+  ✓ Don't flap hand around
+  ✓ Use deliberate, controlled motions
+
+
+VOICE COMMAND ISSUES
+──────────────────
+
+Problem: Browser says "Microphone not found"
+Symptoms:
+  • Voice indicator shows "VOICE N/A"
+  • Click doesn't activate listening
+  • Browser doesn't ask for mic permission
+
+Causes:
+  • Browser doesn't support Web Speech API
+  • Microphone disabled in OS
+  • No microphone hardware
+
+Solutions:
+  1. Check Browser Support:
+     ✓ Chrome/Edge = best support
+     ✓ Firefox = good support
+     ✓ Safari = good support
+     ✓ IE = not supported
+
+  2. Check OS Microphone:
+     • Windows: Settings > Privacy > Microphone
+     • Mac: System Preferences > Security
+     • Ensure browser has permission
+
+  3. Test Microphone:
+     • Try another app (Teams, Discord, etc.)
+     • If other apps work, browser issue
+     • If no other apps work, hardware issue
+
+  4. Restart Browser:
+     • Close all browser windows
+     • Reopen
+     • Try voice again
+
+
+Problem: Voice command recognized but wrong action
+Symptoms:
+  • Toast shows correct command: "Create Sphere"
+  • But wrong object spawned
+  • Or no action happened
+
+Causes:
+  • Speech-to-text mismatch
+  • Command not in vocabulary
+  • Typo in voice input
+
+Solutions:
+  1. Speak More Clearly
+     • Enunciate each word
+     • Normal speaking pace
+     • Not too fast/slow
+
+  2. Quiet Environment
+     • Reduce background noise
+     • Close windows
+     • Mute other sound sources
+
+  3. Use Simpler Commands
+     • "Create Sphere" (not "Spawn a sphere")
+     • "Delete" (not "Remove the object")
+     • "Glass" (not "Apply glass material")
+
+  4. Check Console
+     • Press [F12]
+     • Look for error messages
+     • Try different browser
+
+Problem: Voice always off (won't activate)
+Symptoms:
+  • Click voice indicator does nothing
+  • [V] key doesn't work
+  • No "LISTENING" status
+
+Causes:
+  • Permission denied
+  • Microphone in use by other app
+  • Browser issue
+
+Solutions:
+  1. Grant Microphone Permission:
+     • Allow when browser asks
+     • Check browser settings
+     • Reset permissions
+
+  2. Close Other Apps:
+     • Zoom, Skype, Discord, etc.
+     • Can lock microphone
+     • Close and retry
+
+  3. Restart Browser:
+     • Completely close
+     • Reopen
+     • Try voice again
+
+
+PERFORMANCE ISSUES
+──────────────────
+
+Problem: FPS drops below 30 (very choppy)
+Symptoms:
+  • Right panel shows red FPS
+  • Motion feels jittery
+  • Objects move in steps
+
+Causes:
+  • Too many objects (>50 with physics)
+  • Physics enabled with many collisions
+  • Old/slow hardware
+  • Browser running too many tabs
+
+Solutions:
+  1. Reduce Object Count:
+     • Clear scene [⌫ CLEAR]
+     • Delete old objects
+     • Keep <30 objects if physics on
+
+  2. Disable Physics:
+     • Press [P] to toggle off
+     • Objects won't fall anymore
+     • FPS should improve 2-5ms
+
+  3. Close Other Tabs:
+     • Browser uses shared GPU/CPU
+     • Close unneeded tabs
+     • Reopen GestureAR Studio
+
+  4. Restart Browser:
+     • Full restart usually helps
+     • Clears memory leaks
+
+  5. Check Hardware:
+     • GPU very old? (10+ years)
+     • Low VRAM? (try scaling down)
+     • No discrete GPU? (integrated slower)
+
+Problem: Camera video is choppy/stuttering
+Symptoms:
+  • Video feed not smooth
+  • Hand tracking jittery
+  • Gestures unreliable
+
+Causes:
+  • CPU overloaded (high CPU usage)
+  • Browser sharing GPU
+  • Old webcam
+
+Solutions:
+  ✓ Close other apps
+  ✓ Close other browser tabs
+  ✓ Ensure good lighting (reduces tracking load)
+  ✓ Restart browser
+  ✓ Try Chrome (best video codec support)
+
+
+OBJECT/SCENE ISSUES
+──────────────────
+
+Problem: Object disappeared off-screen
+Symptoms:
+  • Object in scene list but not visible
+  • Metrics show object count correct
+  • Can't find object visually
+
+Causes:
+  • Moved far away (outside visible area)
+  • Fell through floor if physics enabled
+  • Thrown with momentum (future feature)
+
+Solutions:
+  1. Click Object in Scene List (left panel)
+     • Selects object
+     • See in metrics
+     • Use teleport to bring back
+
+  2. Use CLEAR Button
+     • Clear entire scene
+     • Start fresh
+
+  3. Export & Reimport (v2.0)
+     • When import ready
+     • Recover from backup
+
+Problem: Object won't delete
+Symptoms:
+  • Fist gesture doesn't delete
+  • Button press doesn't delete
+  • Voice "Delete" doesn't work
+
+Causes:
+  • Object is locked
+  • Not selected properly
+
+Solutions:
+  ✓ Unlock object first [👍 gesture or button]
+  ✓ Ensure object is selected (cyan outline)
+  ✓ Try again
+
+Problem: Physics objects stuck in floor
+Symptoms:
+  • Objects not bouncing
+  • Stuck at Y = -2.5
+  • Won't move
+
+Causes:
+  • Object scale too small
+  • Velocity lost (grabbed and released)
+  • Physics lag on old hardware
+
+Solutions:
+  ✓ Clear scene and restart
+  ✓ Disable physics [P]
+  ✓ Move object manually (mouse drag)
+
+Problem: Can't reach all objects on screen
+Symptoms:
+  • Objects too far up/down/left/right
+  • Can't point at them effectively
+  • Hand tracking loses them
+
+Causes:
+  • Spawned in awkward position
+  • Camera not covering full area
+  • Hand tracking margin too small
+
+Solutions:
+  1. Use Mouse to Select:
+     • Click object in viewport
+     • Better than hand reaching
+
+  2. Use Scene List (left panel):
+     • Click object by name
+     • Select from list
+
+  3. Adjust Workspace:
+     • Spawn new objects in center
+     • Delete edge objects
+     • Use clear to reset
+
+
+APPLICATION ISSUES
+──────────────────
+
+Problem: App won't load (blank screen)
+Symptoms:
+  • Page stays blank
+  • No UI appears
+  • Loading ring missing
+
+Causes:
+  • JavaScript error
+  • Three.js CDN not loaded
+  • Browser compatibility issue
+
+Solutions:
+  1. Check Browser Console:
+     • Press [F12]
+     • Click "Console" tab
+     • Look for red error messages
+     • Screenshot and report
+
+  2. Try Different Browser:
+     • Chrome (most compatible)
+     • Edge (Chromium-based)
+     • Firefox (good support)
+     • Safari (good support)
+
+  3. Clear Browser Cache:
+     • Press [Ctrl+Shift+Delete]
+     • Select "All time"
+     • Click Clear
+     • Reload page
+
+  4. Check Internet:
+     • Three.js loaded from CDN
+     • Need internet connection
+     • MediaPipe loads from CDN
+     • Check connection
+
+  5. Disable Browser Extensions:
+     • Disable ad blockers
+     • Disable VPN
+     • Disable privacy extensions
+     • Reload page
+
+Problem: App freezes/unresponsive
+Symptoms:
+  • Can't click buttons
+  • Hand tracking stops
+  • Stuck on loading screen
+
+Causes:
+  • Browser ran out of memory
+  • JavaScript infinite loop
+  • GPU crashed
+  • OS issue
+
+Solutions:
+  1. Wait 30 Seconds:
+     • Sometimes just takes time
+     • JavaScript may be processing
+
+  2. Refresh Page:
+     • Press [F5] or [Ctrl+R]
+     • Hard refresh: [Ctrl+Shift+R]
+     • Clears cache and reloads
+
+  3. Restart Browser:
+     • Completely close
+     • Reopen
+     • Many issues fixed by restart
+
+  4. Restart Computer:
+     • If still frozen
+     • Last resort
+     • Fixes OS-level issues
+
+Problem: Export file won't download
+Symptoms:
+  • Click "Export" but no file appears
+  • Toast says "Scene exported" but no file
+  • Downloads folder is empty
+
+Causes:
+  • Browser downloads disabled
+  • Firewall blocking
+  • File system permission issue
+
+Solutions:
+  1. Check Browser Settings:
+     • Ensure downloads allowed
+     • Check default download folder
+     • File may be there with auto-name
+
+  2. Check Permissions:
+     • Downloads folder writable?
+     • User permissions correct?
+     • Run browser as administrator
+
+  3. Disable Pop-up Blocker:
+     • File download blocked by pop-up settings
+     • Whitelist website
+     • Retry export
+
+
+================================================================================
+11. KEYBOARD SHORTCUTS CHEAT SHEET
+================================================================================
+
+QUICK REFERENCE TABLE
+──────────────────────
+
+┌─────────────────────────────────────────────────────────────┐
+│ MODE SELECTION                                              │
+├─────────────────────────────────────────────────────────────┤
+│ [1]           Select Mode (default)                         │
+│ [2]           Move Mode (mouse drag = move)                 │
+│ [3]           Rotate Mode (mouse drag = rotate)             │
+│ [4]           Scale Mode (mouse drag/wheel = scale)         │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│ OBJECT OPERATIONS                                           │
+├─────────────────────────────────────────────────────────────┤
+│ [Space]       Spawn new object (current shape/material)    │
+│ [Delete]      Delete selected object                       │
+│ [Backspace]   Delete selected object (alternate)           │
+│ [Ctrl+D]      Duplicate selected object                    │
+│ [Cmd+D]       Duplicate (Mac)                              │
+│ [Double-Click]Duplicate selected object (mouse)            │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│ UNDO / REDO                                                 │
+├─────────────────────────────────────────────────────────────┤
+│ [Ctrl+Z]      Undo last action                             │
+│ [Cmd+Z]       Undo (Mac)                                   │
+│ [Ctrl+Y]      Redo last undo                               │
+│ [Ctrl+Shift+Z]Redo (alternate)                             │
+│ [Cmd+Shift+Z] Redo (Mac)                                   │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│ VIEW & DEBUG                                                │
+├─────────────────────────────────────────────────────────────┤
+│ [G]           Toggle debug overlay (hand landmarks)        │
+│ [P]           Toggle physics (gravity on/off)              │
+│ [V]           Toggle voice command (microphone on/off)     │
+│ [F12]         Open browser DevTools (diagnostics)          │
+│ [F5]          Reload page                                  │
+│ [Ctrl+Shift+R]Hard refresh (clear cache & reload)          │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│ MOUSE OPERATIONS (IN CANVAS)                                │
+├─────────────────────────────────────────────────────────────┤
+│ Left Click    Select object (raycast from camera)          │
+│ Click + Drag  Move/rotate/scale based on current mode      │
+│ Scroll Wheel  Scale selected object (scale mode)           │
+│ Double-Click  Duplicate selected object                    │
+│ Right Click   Reserved for future (context menu v2.0)      │
+└─────────────────────────────────────────────────────────────┘
+
+FULL KEYBOARD REFERENCE
+─────────────────────
+
+NUMBERS (Mode Selection):
+  1 = Select Mode
+  2 = Move Mode
+  3 = Rotate Mode
+  4 = Scale Mode
+
+LETTERS (Toggles):
+  G = Debug Mode (show hand landmarks)
+  P = Physics (gravity on/off)
+  V = Voice Commands (microphone on/off)
+
+MODIFIERS (with Ctrl/Cmd):
+  Ctrl+Z = Undo
+  Ctrl+Y = Redo
+  Ctrl+D = Duplicate
+  Ctrl+Shift+Z = Redo (alt)
+  Ctrl+Shift+R = Hard refresh (F5 = soft refresh)
+
+SPECIAL KEYS:
+  Space = Spawn new object
+  Delete = Delete selected object
+  Backspace = Delete selected object (alt)
+  F12 = Open DevTools
+  F5 = Reload page
+
+MOUSE / TOUCH:
+  Left Click = Select object
+  Click+Drag = Transform based on mode
+  Scroll Wheel = Scale in scale mode
+  Double-Click = Duplicate
+  Touch+Drag = Same as mouse on mobile
+
+
+================================================================================
+12. VOICE COMMAND EXAMPLES
+================================================================================
+
+REALISTIC VOICE COMMAND SEQUENCES
+───────────────────────────────────
+
+Sequence 1: Creating a Scene
+  1. "Create Cube"           → Spawns cube
+  2. "Glass"                 → Changes to glass
+  3. "Cyan"                  → Changes to cyan
+  4. "Create Sphere"         → Spawns sphere
+  5. "Metal"                 → Changes to metal
+  6. "Magenta"               → Changes to magenta
+  7. "Create Cylinder"       → Spawns cylinder
+  8. "Neon"                  → Changes to neon
+  9. "Green"                 → Changes to green
+
+Sequence 2: Editing Objects
+  1. "Duplicate"             → Clones selected object
+  2. "Green"                 → Changes color
+  3. "Duplicate"             → Clones again
+  4. "Amber"                 → Changes color
+
+Sequence 3: Physics Simulation
+  1. "Physics On"            → Enables gravity
+  2. "Create Sphere"         → Spawns sphere (falls)
+  3. "Create Sphere"         → Spawns sphere (falls)
+  4. "Create Sphere"         → Spawns sphere (falls)
+   — Objects all fall to floor with bounces —
+  5. "Physics Off"           → Disables gravity
+
+Sequence 4: Complex Scene
+  1. "Create Cube"
+  2. "Metal"
+  3. "Duplicate"
+  4. "Duplicate"
+  5. "Create Sphere"
+  6. "Glass"
+  7. "Create Torus"
+  8. "Neon"
+  9. "Purple"
+  10. "Export Scene"         → Downloads JSON file
+
+
+COMMON VOICE COMMANDS BY CATEGORY
+───────────────────────────────────
+
+SHAPE CREATION:
+  "Create Cube" / "Create Box" / "Spawn Cube"
+  "Create Sphere" / "Spawn Sphere"
+  "Create Cylinder" / "Spawn Cylinder"
+  "Create Cone" / "Spawn Cone"
+  "Create Torus" / "Spawn Torus"
+  "Create Pyramid" / "Spawn Pyramid"
+  "Create Capsule" / "Spawn Capsule"
+  "Create Plane" / "Spawn Plane"
+
+OBJECT MANAGEMENT:
+  "Duplicate" / "Duplicate Object" / "Copy"
+  "Delete" / "Delete Selected Object" / "Remove"
+  "Lock" / "Lock Object"
+  "Unlock" / "Unlock Object"
+
+MATERIALS:
+  "Glass" / "Apply Glass Material"
+  "Metal" / "Apply Metal Material"
+  "Neon" / "Apply Neon Material"
+  "Holographic" / "Apply Holographic"
+  "Chrome" / "Apply Chrome Material"
+  "Wood" / "Apply Wood Material"
+  "Plastic" / "Apply Plastic Material"
+  "Carbon" / "Apply Carbon Material"
+
+COLORS:
+  "Cyan" / "Change Color to Cyan"
+  "Magenta" / "Change Color to Magenta"
+  "Green" / "Change Color to Green"
+  "Amber" / "Change Color to Amber" / "Orange"
+  "White" / "Change Color to White"
+  "Purple" / "Change Color to Purple"
+
+PHYSICS:
+  "Physics On" / "Enable Physics" / "Enable Gravity"
+  "Physics Off" / "Disable Physics" / "Disable Gravity"
+
+SCENE:
+  "Clear Scene" / "Clear All" / "Delete All"
+  "Export Scene" / "Save Scene" / "Download Scene"
+
+UNDO/REDO:
+  "Undo" / "Undo Last" / "Go Back"
+  "Redo" / "Redo Last" / "Go Forward"
+
+
+VOICE COMMAND ERROR RECOVERY
+──────────────────────────────
+
+If Voice Misrecognizes:
+
+Wrong Shape Spawned:
+  Voice Input: "Create Sphere"
+  Actual: "Create Shere" (typo)
+  Result: Default cube spawned
+  Fix: "Delete" and try again more clearly
+
+Wrong Material Applied:
+  Voice Input: "Neon"
+  Actual: "Knee on" (ambient noise)
+  Result: Different material applied
+  Fix: Look at right panel to see what happened
+       Use voice "Glass" to correct if needed
+
+Command Not Recognized:
+  Voice Input: "Create a nice blue sphere"
+  Actual: No recognized command
+  Result: Toast shows "Command not recognized"
+  Fix: Simplify to "Create Sphere" or "Blue"
+       Use gesture instead
+       Try again after background noise stops
+
+
+VOICE + GESTURE HYBRID WORKFLOW
+─────────────────────────────────
+
+Efficient Mixed Approach:
+
+Step 1: Voice to Create
+  Say: "Create Sphere"
+  (Faster than UI clicks)
+
+Step 2: Gesture to Select & Move
+  Use: Open Palm to select
+  Use: Pinch to grab & move
+  (More natural than voice description of position)
+
+Step 3: Voice to Change Material
+  Say: "Glass"
+  (One word is reliable)
+
+Step 4: Mouse Scroll to Scale
+  Scroll wheel up/down
+  (Most precise scaling)
+
+Step 5: Voice to Duplicate
+  Say: "Duplicate"
+  (One word, reliable)
+
+Step 6: Gesture for Delete
+  Use: Fist gesture
+  (Immediate, satisfying feedback)
+
+Step 7: Voice to Export
+  Say: "Export Scene"
+  (No UI button memory needed)
+
+
+================================================================================
+13. GESTURE COMBINATIONS
+================================================================================
+
+MULTI-GESTURE WORKFLOWS
+────────────────────────
+
+Combination 1: Select, Scale, Rotate
+  1. OPEN PALM → Select object (point hand at it)
+  2. SPREAD → Scale it up (fingers extended wide)
+  3. ROCK → Rotate it (index + pinky out)
+  Result: Object positioned, sized, and oriented
+
+Combination 2: Duplicate & Array
+  1. OPEN PALM → Select object
+  2. DOUBLE PINCH → Duplicate (pinch with middle extended)
+  3. PINCH → Grab duplicate
+  4. MOVE HAND RIGHT
+  5. ROCK → Rotate
+  6. Repeat steps 2-5 for array of objects
+  Result: Row of increasingly positioned objects
+
+Combination 3: Delete Confirmation Workflow
+  1. OPEN PALM → Select object to delete
+  2. ROCK → Rotate to inspect it
+  3. SPREAD → Scale up to see details
+  4. FIST → Close hand to confirm deletion
+  Result: Safe deletion with preview
+
+Combination 4: Physics Interaction
+  1. Enable Physics with [P] key
+  2. OPEN PALM → Select dropping object
+  3. PINCH → Grab it mid-fall
+  4. Move hand side-to-side (object follows)
+  5. Release pinch → Drop it
+  6. Watch bounce and settle
+  Result: Interactive physics experimentation
+
+Combination 5: Complex Positioning
+  1. OPEN PALM → Select object
+  2. PINCH & DRAG → Move to rough position
+  3. POINT → Teleport to exact spot
+  4. PINCH & DRAG → Fine-tune position
+  Result: Coarse then fine positioning
+
+
+GESTURE CHAINING
+─────────────────
+
+Continuous Gesture Workflow (no releases):
+
+Scenario: Rotate & Move Simultaneously
+  1. Make ROCK gesture (index + pinky up)
+  2. While holding, move hand sideways
+  3. Object rotates as hand moves
+  4. Seamless continuous motion
+  5. Release to stop
+
+Scenario: Hold OPEN PALM for Selection
+  1. Point OPEN PALM at multiple objects
+  2. Each object briefly highlights as you hover
+  3. Nearest becomes selected
+  4. Move hand slightly = new selection
+  5. Useful for reviewing scene
+
+Scenario: Scale Then Delete
+  1. SPREAD → Scale object up
+  2. Keep hand position
+  3. FIST → Close to delete
+  4. Object removed while you're still in position
+  5. Can delete multiple in sequence
+
+
+TRANSITION BETWEEN GESTURES
+──────────────────────────────
+
+Smooth Gesture Transitions:
+
+Open Palm → Pinch:
+  1. Hand open, all fingers extended
+  2. Slowly bring thumb to index
+  3. System recognizes pinch start
+  4. Object grabs smoothly
+  Result: No accidental triggers during transition
+
+Pinch → Release:
+  1. Thumb + index touching (pinch active)
+  2. Object follows hand
+  3. Gradually open hand (extend fingers)
+  4. System recognizes release
+  5. Object releases at final position
+  Result: Smooth, no jittery release
+
+Point → Spread:
+  1. Index extended (pointing)
+  2. Gradually extend other fingers
+  3. Hand opens fully
+  4. System transitions to OPEN PALM
+  Result: Smooth hand opening
+
+Pro Tips:
+  ✓ Transitions are detected continuously (no gaps)
+  ✓ Slower transitions = more reliable
+  ✓ Avoid rapid flapping (confuses system)
+  ✓ Hold stable for 0.5 seconds between actions
+
+
+GESTURE CONFLICTS & RESOLUTIONS
+──────────────────────────────────
+
+Ambiguous Poses (similar-looking):
+
+Point vs Thumbs Up:
+  Point: Index extended, others curled (pointing down/forward)
+  Thumbs: Thumb extended, others curled (pointing up)
+  Fix: Clearly aim index forward vs thumb upward
+
+Rock vs Peace:
+  Rock: Index + Pinky up, middle+ring down
+  Peace: Index + Middle up, ring+pinky down
+  Fix: Rock uses extreme spread, peace is fingers together
+
+OPEN PALM vs SPREAD:
+  OPEN PALM: 5 fingers extended normally
+  SPREAD: 5 fingers extended + spread wide (distance > 0.35)
+  Fix: Make spread more exaggerated (fingers apart)
+
+Resolution Strategy:
+  1. If gesture triggers wrong action:
+     → Check debug overlay [G]
+     → See which joints are detected
+     → Adjust hand pose to be more distinct
+  2. Use voice command instead:
+     → More reliable than ambiguous gesture
+     → "Delete" instead of fist
+  3. Enable more lighting:
+     → Better tracking = better gesture
+     → Reduces ambiguity
+
+
+================================================================================
+14. TIPS & TRICKS
+================================================================================
+
+PRODUCTIVITY TIPS
+──────────────────
+
+Workflow Optimization:
+
+Tip 1: Use Keyboard Shortcuts
+  ✓ [Space] to spawn (faster than UI)
+  ✓ [P] to toggle physics
+  ✓ [G] to debug
+  ✓ [1-4] to change mode
+  ✓ Saves clicks, improves flow
+
+Tip 2: Lock Important Objects
+  ✓ 👍 gesture to lock key pieces
+  ✓ Prevents accidental moves
+  ✓ Still allows viewing/duplicating
+  ✓ Unlock for editing
+
+Tip 3: Use Undo Liberally
+  ✓ [Ctrl+Z] to experiment without fear
+  ✓ 50-step undo stack
+  ✓ Try, fail, undo, try again
+  ✓ No penalty for mistakes
+
+Tip 4: Export Regularly
+  ✓ [⬇ EXPORT] after good sessions
+  ✓ JSON backup prevents data loss
+  ✓ Can share with others (future import)
+  ✓ Timestamps help organize
+
+Tip 5: Debug When Stuck
+  ✓ [G] to see hand landmarks
+  ✓ Check if joints are tracked
+  ✓ Look for jittery/missing points
+  ✓ Adjust lighting if needed
+
+Tip 6: Combine Gestures & Clicks
+  ✓ Gesture to select (hand)
+  ✓ Voice to change material (mouth)
+  ✓ Mouse to fine-tune (hand & precision)
+  ✓ Use best tool for each task
+
+
+ADVANCED TECHNIQUES
+─────────────────
+
+Technique 1: Quick Duplicate Array
+  • Duplicate quickly: "Duplicate" voice 5 times
+  • Objects stack on each other
+  • Use pinch to separate them
+  • Result: Quick clone army
+
+Technique 2: Physics Experiment
+  • Enable gravity [P]
+  • Spawn 10 spheres
+  • Watch them all fall and bounce
+  • Great for learning physics
+  • Disable [P] to freeze scene
+
+Technique 3: Material Showcase
+  • Create 7 identical objects
+  • Each with different material
+  • Voice: "Glass", "Metal", "Neon", etc.
+  • Compare materials side-by-side
+  • Screenshot for comparison
+
+Technique 4: Precise Positioning
+  1. Use PINCH for coarse placement (35% lerp, smooth)
+  2. Switch to POINT for final fine-tuning (15% lerp, fast)
+  3. Result: Quick then accurate
+
+Technique 5: Rotation Inspection
+  1. Select object with OPEN PALM
+  2. ROCK gesture continuously
+  3. Object rotates smoothly
+  4. Inspect from all angles
+  5. No manual rotation needed
+
+Technique 6: Multi-Object Manipulation
+  • Two-hand mode not fully implemented (v1.0)
+  • Workaround: Lock objects, manipulate one at a time
+  • Or: Use mouse for secondary object
+  • Future v2.0: Full multi-select + transform
+
+
+CREATIVE WORKFLOWS
+────────────────
+
+Workflow 1: Build a Tower
+  1. "Create Cube"
+  2. "Metal"
+  3. "Duplicate" × 5
+  4. Use PINCH to stack vertically
+  5. Use ROCK to twist each
+  6. Result: Twisted metal tower
+
+Workflow 2: Create a Galaxy
+  1. "Create Sphere"
+  2. "Neon"
+  3. Various colors: "Cyan", "Magenta", "Green"
+  4. Use POINT to teleport around
+  5. Use SPREAD to resize each
+  6. Position spheres in space
+  7. Result: Floating neon galaxy
+
+Workflow 3: Gradient Color Study
+  1. Create 7 identical objects
+  2. Apply each color from palette
+  3. Arrange in circle
+  4. Use ROCK to sync rotation
+  5. Result: Color wheel visualization
+
+Workflow 4: Material Comparison
+  1. Create object, try each material
+  2. Use voice "Glass", "Metal", "Neon", etc.
+  3. Screenshot each
+  4. Compare visually
+  5. Share screenshots
+
+
+PERFORMANCE BEST PRACTICES
+───────────────────────────
+
+Keep FPS High:
+  ✓ Regularly check right panel (FPS bar)
+  ✓ Keep objects <30 with physics enabled
+  ✓ Disable physics when not needed
+  ✓ Use CLEAR to remove old objects
+  ✓ Monitor polygon count
+
+Optimize Lighting:
+  ✓ Good lighting = better hand tracking
+  ✓ Reduces noise in gesture detection
+  ✓ Natural light preferred
+  ✓ Overhead or side lighting best
+  ✓ Avoid backlit (shadows)
+
+Optimize Gestures:
+  ✓ Smooth, deliberate movements
+  ✓ Hold gestures steady
+  ✓ Don't flap hands around
+  ✓ Keep hands in frame
+  ✓ Face camera directly
+
+Optimize Voice:
+  ✓ Quiet environment
+  ✓ Normal speaking voice
+  ✓ Clear pronunciation
+  ✓ Pause between commands
+  ✓ Simpler commands work better
+
+
+TROUBLESHOOTING TIPS
+──────────────────
+
+If Frustrated:
+
+1. Take a breath
+   • Technology can be finicky
+   • Most issues are resolvable
+   • Try systematic approach
+
+2. Gather Information
+   • Screenshot error messages [Print Scrn]
+   • Note FPS and metrics
+   • Enable debug [G]
+   • Check browser console [F12]
+
+3. Try Systematic Troubleshooting
+   • One variable at a time
+   • Disable features (physics, voice, etc.)
+   • Test in different lighting
+   • Try different browser
+   • Restart browser/computer
+
+4. Check Documentation
+   • Use Ctrl+F to search
+   • Review relevant section
+   • Check troubleshooting (Section 10)
+
+5. Report Issues
+   • Developer console errors [F12]
+   • Screenshots of metrics
+   • Description of steps to reproduce
+   • Browser version
+
+
+EASTER EGGS & FUN FACTS
+───────────────────────
+
+Fun Easter Eggs:
+  🎉 Clear scene with 20+ objects = special animation (future v1.5)
+  🎨 Spawn 7 of each color = rainbow glow (future v1.5)
+  ⚛️ Physics + 50 spheres = physics stress test mode
+  🎬 Export then immediately reload = scene persists (future import)
+
+
+FUTURE FEATURES TO ANTICIPATE
+───────────────────────────────
+
+Coming in v2.0:
+  ✓ Scene import from JSON files
+  ✓ Multi-object selection & transform
+  ✓ Momentum transfer on object release (throwing)
+  ✓ Full Cannon.js physics engine
+  ✓ Custom gesture training
+  ✓ Workspace presets
+  ✓ Collaboration features
+  ✓ Cloud save/sync
+  ✓ Advanced materials (displacement, normal maps)
+  ✓ Particle effects
+  ✓ Post-processing (bloom, color grading)
+
+
+USER SUCCESS STORIES
+──────────────────
+
+Ways People Use GestureAR Studio:
+
+• **Architects** — Visualize 3D models with hand gestures
+• **Designers** — Prototype spatial interactions
+• **Educators** — Teach geometry with interactive 3D
+• **Artists** — Create kinetic AR sculptures
+• **Developers** — Test gesture recognition pipelines
+• **Gamers** — Play AR gesture-based mini-games (future)
+• **Presenters** — Gesture-controlled AR presentations
+• **Researchers** — Study hand gesture interfaces
+
+
+================================================================================
+                          END OF USER MANUAL
+================================================================================
+
+Document Version: 1.0
+Last Updated: June 15, 2026
+Application: GestureAR Studio v1.0
+Browser Support: Chrome, Edge, Firefox, Safari (modern versions)
+Internet: Required (CDN resources)
+Camera: Required
+Microphone: Optional (for voice commands)
+
+Questions? Check troubleshooting section (Section 10) or enable debug mode [G]
+Ready to create? Open gesture-ar-studio.html in your browser!
+
+================================================================================
