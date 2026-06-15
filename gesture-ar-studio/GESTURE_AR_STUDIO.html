@@ -1,0 +1,2536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GestureAR Studio</title>
+<style>
+  /* ============================================================
+     DESIGN TOKENS — GestureAR Studio
+     Palette: Electric Cyan, Laser Magenta, Matrix Green,
+     Carbon Gunmetal, Pure Quantum White, Deep Space Obsidian,
+     Solar Amber
+  ============================================================ */
+  :root {
+    --cyan:     #00F0FF;
+    --magenta:  #FF007F;
+    --green:    #00FF66;
+    --gunmetal: #1A1A24;
+    --white:    #FFFFFF;
+    --obsidian: #0B0C10;
+    --amber:    #FF9900;
+
+    --glass-bg:      rgba(26,26,36,0.55);
+    --glass-border:  rgba(0,240,255,0.18);
+    --glass-shadow:  0 8px 40px rgba(0,0,0,0.6);
+    --glow-cyan:     0 0 16px rgba(0,240,255,0.55);
+    --glow-magenta:  0 0 16px rgba(255,0,127,0.55);
+    --glow-green:    0 0 16px rgba(0,255,102,0.55);
+    --glow-amber:    0 0 16px rgba(255,153,0,0.55);
+
+    --font-display:  'Orbitron', 'Rajdhani', system-ui, sans-serif;
+    --font-body:     'Inter', system-ui, sans-serif;
+    --font-mono:     'JetBrains Mono', 'Fira Code', monospace;
+
+    --radius-sm:  6px;
+    --radius-md:  12px;
+    --radius-lg:  20px;
+    --transition: 0.22s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    background: var(--obsidian);
+    font-family: var(--font-body);
+    color: var(--white);
+    user-select: none;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ============================================================
+     LAYOUT
+  ============================================================ */
+  #app {
+    position: fixed; inset: 0;
+    display: grid;
+    grid-template-rows: 56px 1fr;
+    grid-template-columns: 260px 1fr 260px;
+    grid-template-areas:
+      "header header header"
+      "left   main   right";
+  }
+
+  /* ============================================================
+     CAMERA + THREE.JS CANVAS
+  ============================================================ */
+  #camera-bg {
+    position: fixed; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    z-index: 0;
+    transform: scaleX(-1); /* mirror */
+  }
+
+  #three-canvas {
+    position: fixed; inset: 0;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  #mediapipe-canvas {
+    position: fixed; inset: 0;
+    width: 100%; height: 100%;
+    z-index: 2;
+    pointer-events: none;
+    transform: scaleX(-1);
+  }
+
+  /* ============================================================
+     HEADER / TOPBAR
+  ============================================================ */
+  #header {
+    grid-area: header;
+    position: relative; z-index: 10;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 20px;
+    background: rgba(11,12,16,0.75);
+    backdrop-filter: blur(24px) saturate(1.6);
+    border-bottom: 1px solid var(--glass-border);
+  }
+
+  .logo {
+    display: flex; align-items: center; gap: 10px;
+    font-family: var(--font-display);
+    font-size: 15px; font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--cyan);
+    text-shadow: var(--glow-cyan);
+  }
+  .logo-icon {
+    width: 28px; height: 28px;
+    background: linear-gradient(135deg, var(--cyan) 0%, var(--magenta) 100%);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    box-shadow: var(--glow-cyan);
+  }
+
+  .header-center {
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .mode-pill {
+    display: flex; align-items: center; gap: 4px;
+    padding: 5px 14px;
+    background: rgba(0,240,255,0.08);
+    border: 1px solid rgba(0,240,255,0.25);
+    border-radius: 999px;
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--cyan);
+    cursor: pointer;
+    transition: var(--transition);
+  }
+  .mode-pill:hover {
+    background: rgba(0,240,255,0.15);
+    box-shadow: var(--glow-cyan);
+  }
+  .mode-pill.active {
+    background: rgba(0,240,255,0.18);
+    box-shadow: var(--glow-cyan);
+  }
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+  .status-dot.red { background: var(--magenta); box-shadow: 0 0 8px var(--magenta); }
+  .status-dot.amber { background: var(--amber); box-shadow: 0 0 8px var(--amber); }
+  @keyframes pulse-dot {
+    0%,100% { opacity:1; transform:scale(1); }
+    50% { opacity:0.5; transform:scale(0.75); }
+  }
+
+  .header-right {
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  .hdr-btn {
+    padding: 6px 14px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: rgba(255,255,255,0.7);
+    cursor: pointer;
+    transition: var(--transition);
+  }
+  .hdr-btn:hover {
+    background: rgba(255,255,255,0.1);
+    color: var(--white);
+  }
+  .hdr-btn.primary {
+    background: linear-gradient(90deg, rgba(0,240,255,0.15), rgba(255,0,127,0.1));
+    border-color: rgba(0,240,255,0.3);
+    color: var(--cyan);
+  }
+
+  /* ============================================================
+     SIDE PANELS — GLASS
+  ============================================================ */
+  .panel {
+    position: relative; z-index: 10;
+    display: flex; flex-direction: column;
+    background: var(--glass-bg);
+    backdrop-filter: blur(32px) saturate(1.4);
+    border-color: var(--glass-border);
+    overflow: hidden;
+    padding: 14px;
+    gap: 14px;
+  }
+  #left-panel {
+    grid-area: left;
+    border-right: 1px solid var(--glass-border);
+  }
+  #right-panel {
+    grid-area: right;
+    border-left: 1px solid var(--glass-border);
+  }
+
+  .panel-section {
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .panel-label {
+    font-size: 9px;
+    font-family: var(--font-mono);
+    letter-spacing: 0.2em;
+    color: rgba(255,255,255,0.35);
+    text-transform: uppercase;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+
+  /* ============================================================
+     SHAPE SELECTOR GRID
+  ============================================================ */
+  .shape-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+  .shape-btn {
+    aspect-ratio: 1;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 4px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: var(--transition);
+    font-size: 18px;
+  }
+  .shape-btn span {
+    font-size: 8px;
+    font-family: var(--font-mono);
+    color: rgba(255,255,255,0.4);
+  }
+  .shape-btn:hover {
+    background: rgba(0,240,255,0.08);
+    border-color: rgba(0,240,255,0.3);
+    box-shadow: var(--glow-cyan);
+    transform: scale(1.05);
+  }
+  .shape-btn.selected {
+    background: rgba(0,240,255,0.12);
+    border-color: var(--cyan);
+    box-shadow: var(--glow-cyan);
+  }
+
+  /* ============================================================
+     MATERIAL SELECTOR
+  ============================================================ */
+  .material-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+  .mat-btn {
+    padding: 7px 4px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 4px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: var(--transition);
+    font-size: 14px;
+  }
+  .mat-btn span {
+    font-size: 7px;
+    font-family: var(--font-mono);
+    color: rgba(255,255,255,0.4);
+  }
+  .mat-btn:hover {
+    background: rgba(255,0,127,0.08);
+    border-color: rgba(255,0,127,0.3);
+    box-shadow: var(--glow-magenta);
+  }
+  .mat-btn.selected {
+    background: rgba(255,0,127,0.12);
+    border-color: var(--magenta);
+    box-shadow: var(--glow-magenta);
+  }
+
+  /* ============================================================
+     COLOR PALETTE
+  ============================================================ */
+  .color-palette {
+    display: flex; gap: 6px; flex-wrap: wrap;
+  }
+  .color-swatch {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: var(--transition);
+    position: relative;
+  }
+  .color-swatch:hover { transform: scale(1.2); }
+  .color-swatch.selected {
+    border-color: var(--white);
+    box-shadow: 0 0 10px rgba(255,255,255,0.5);
+  }
+
+  /* ============================================================
+     SLIDER
+  ============================================================ */
+  .slider-row {
+    display: flex; flex-direction: column; gap: 5px;
+  }
+  .slider-label {
+    display: flex; justify-content: space-between;
+    font-size: 10px; font-family: var(--font-mono);
+    color: rgba(255,255,255,0.5);
+  }
+  input[type=range] {
+    width: 100%;
+    -webkit-appearance: none;
+    height: 3px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 99px;
+    outline: none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--cyan);
+    box-shadow: var(--glow-cyan);
+    cursor: pointer;
+    transition: var(--transition);
+  }
+  input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.3); }
+
+  /* ============================================================
+     ANALYTICS / RIGHT PANEL
+  ============================================================ */
+  .metric-card {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .metric-name {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: rgba(255,255,255,0.4);
+  }
+  .metric-value {
+    font-size: 14px;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    color: var(--cyan);
+  }
+  .metric-value.green { color: var(--green); }
+  .metric-value.amber { color: var(--amber); }
+  .metric-value.red   { color: var(--magenta); }
+
+  .fps-bar {
+    height: 32px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(0,240,255,0.12);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .fps-fill {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    background: linear-gradient(90deg, rgba(0,255,102,0.3), rgba(0,240,255,0.3));
+    transition: width 0.3s ease;
+  }
+  .fps-label {
+    position: relative; z-index: 1;
+    font-family: var(--font-mono);
+    font-size: 13px; font-weight: 600;
+    color: var(--green);
+  }
+
+  /* ============================================================
+     GESTURE HUD (bottom center)
+  ============================================================ */
+  #gesture-hud {
+    position: fixed;
+    bottom: 28px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    pointer-events: none;
+  }
+
+  .gesture-display {
+    background: rgba(11,12,16,0.8);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(0,240,255,0.25);
+    border-radius: var(--radius-lg);
+    padding: 10px 24px;
+    display: flex; align-items: center; gap: 12px;
+    min-width: 260px;
+    box-shadow: var(--glow-cyan), var(--glass-shadow);
+  }
+  .gesture-icon {
+    font-size: 24px;
+    filter: drop-shadow(0 0 8px var(--cyan));
+  }
+  .gesture-info { display: flex; flex-direction: column; }
+  .gesture-name {
+    font-family: var(--font-display);
+    font-size: 13px; font-weight: 600;
+    color: var(--cyan);
+    letter-spacing: 0.05em;
+  }
+  .gesture-action {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: rgba(255,255,255,0.5);
+  }
+
+  .confidence-bar-wrap {
+    display: flex; align-items: center; gap: 8px;
+    width: 100%;
+  }
+  .confidence-bar-bg {
+    flex: 1; height: 4px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .confidence-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--cyan), var(--green));
+    border-radius: 99px;
+    transition: width 0.15s ease;
+    box-shadow: var(--glow-green);
+  }
+  .confidence-pct {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--green);
+    min-width: 32px;
+    text-align: right;
+  }
+
+  /* ============================================================
+     OBJECT INFO TOOLTIP
+  ============================================================ */
+  #obj-tooltip {
+    position: fixed;
+    z-index: 25;
+    background: rgba(11,12,16,0.88);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(0,240,255,0.2);
+    border-radius: var(--radius-md);
+    padding: 12px 16px;
+    pointer-events: none;
+    display: none;
+    flex-direction: column; gap: 5px;
+    min-width: 160px;
+    box-shadow: var(--glass-shadow), var(--glow-cyan);
+  }
+  .tooltip-title {
+    font-family: var(--font-display);
+    font-size: 12px; font-weight: 700;
+    color: var(--cyan);
+    letter-spacing: 0.08em;
+  }
+  .tooltip-row {
+    display: flex; justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: 10px; color: rgba(255,255,255,0.5);
+  }
+  .tooltip-row span:last-child { color: var(--white); }
+
+  /* ============================================================
+     NOTIFICATION TOASTS
+  ============================================================ */
+  #toast-container {
+    position: fixed;
+    top: 68px; right: 16px;
+    z-index: 50;
+    display: flex; flex-direction: column; gap: 8px;
+    pointer-events: none;
+  }
+  .toast {
+    background: rgba(11,12,16,0.92);
+    backdrop-filter: blur(20px);
+    border-radius: var(--radius-md);
+    padding: 10px 16px;
+    display: flex; align-items: center; gap: 10px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    animation: toast-in 0.3s ease;
+    box-shadow: var(--glass-shadow);
+    max-width: 240px;
+  }
+  .toast.cyan  { border-left: 3px solid var(--cyan);    color: var(--cyan);    box-shadow: var(--glow-cyan); }
+  .toast.green { border-left: 3px solid var(--green);   color: var(--green);   box-shadow: var(--glow-green); }
+  .toast.amber { border-left: 3px solid var(--amber);   color: var(--amber);   box-shadow: var(--glow-amber); }
+  .toast.red   { border-left: 3px solid var(--magenta); color: var(--magenta); box-shadow: var(--glow-magenta); }
+  @keyframes toast-in { from { opacity:0; transform:translateX(30px); } to { opacity:1; transform:translateX(0); } }
+
+  /* ============================================================
+     GESTURE GUIDE OVERLAY
+  ============================================================ */
+  #gesture-guide {
+    position: fixed; inset: 0;
+    z-index: 100;
+    background: rgba(11,12,16,0.92);
+    backdrop-filter: blur(20px);
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 32px;
+    padding: 40px;
+  }
+  .guide-title {
+    font-family: var(--font-display);
+    font-size: 28px; font-weight: 900;
+    color: var(--cyan);
+    text-shadow: var(--glow-cyan);
+    letter-spacing: 0.12em;
+    text-align: center;
+  }
+  .guide-subtitle {
+    font-size: 14px; color: rgba(255,255,255,0.5);
+    text-align: center; margin-top: -20px;
+    font-family: var(--font-mono);
+  }
+  .guide-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    max-width: 900px;
+    width: 100%;
+  }
+  .guide-card {
+    background: rgba(26,26,36,0.8);
+    border: 1px solid rgba(0,240,255,0.15);
+    border-radius: var(--radius-md);
+    padding: 18px 14px;
+    display: flex; flex-direction: column;
+    align-items: center; gap: 10px;
+    text-align: center;
+    transition: var(--transition);
+  }
+  .guide-card:hover {
+    border-color: rgba(0,240,255,0.4);
+    box-shadow: var(--glow-cyan);
+    transform: translateY(-2px);
+  }
+  .guide-gesture {
+    font-size: 36px;
+    filter: drop-shadow(0 0 10px rgba(0,240,255,0.5));
+  }
+  .guide-gesture-name {
+    font-family: var(--font-display);
+    font-size: 10px; font-weight: 700;
+    color: var(--cyan);
+    letter-spacing: 0.1em;
+  }
+  .guide-gesture-desc {
+    font-size: 10px;
+    color: rgba(255,255,255,0.45);
+    line-height: 1.5;
+  }
+  .guide-start-btn {
+    padding: 14px 48px;
+    background: linear-gradient(90deg, var(--cyan), var(--magenta));
+    border: none;
+    border-radius: var(--radius-md);
+    font-family: var(--font-display);
+    font-size: 14px; font-weight: 700;
+    color: var(--obsidian);
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: 0 0 32px rgba(0,240,255,0.4), 0 0 32px rgba(255,0,127,0.2);
+  }
+  .guide-start-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 48px rgba(0,240,255,0.6), 0 0 48px rgba(255,0,127,0.4);
+  }
+
+  /* ============================================================
+     LOADING SCREEN
+  ============================================================ */
+  #loading-screen {
+    position: fixed; inset: 0;
+    z-index: 200;
+    background: var(--obsidian);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 24px;
+  }
+  .loading-logo {
+    font-family: var(--font-display);
+    font-size: 32px; font-weight: 900;
+    color: var(--cyan);
+    text-shadow: var(--glow-cyan);
+    letter-spacing: 0.16em;
+    animation: flicker 3s ease-in-out infinite;
+  }
+  @keyframes flicker {
+    0%,100%{ opacity:1; } 92%{ opacity:1; } 93%{ opacity:0.4; } 94%{ opacity:1; }
+  }
+  .loading-ring {
+    width: 64px; height: 64px;
+    border: 3px solid rgba(0,240,255,0.15);
+    border-top-color: var(--cyan);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    box-shadow: var(--glow-cyan);
+  }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .loading-status {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 0.05em;
+  }
+
+  /* ============================================================
+     TOOLBAR (action buttons — bottom left of main)
+  ============================================================ */
+  #toolbar {
+    position: fixed;
+    bottom: 28px; left: 278px;
+    z-index: 20;
+    display: flex; gap: 8px;
+  }
+  .tool-btn {
+    width: 42px; height: 42px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(11,12,16,0.85);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: var(--radius-sm);
+    font-size: 18px;
+    cursor: pointer;
+    transition: var(--transition);
+    color: rgba(255,255,255,0.7);
+  }
+  .tool-btn:hover {
+    background: rgba(0,240,255,0.12);
+    border-color: var(--cyan);
+    box-shadow: var(--glow-cyan);
+    color: var(--cyan);
+    transform: scale(1.1);
+  }
+  .tool-btn.active {
+    background: rgba(0,240,255,0.15);
+    border-color: var(--cyan);
+    box-shadow: var(--glow-cyan);
+    color: var(--cyan);
+  }
+  .tool-btn.danger:hover {
+    background: rgba(255,0,127,0.12);
+    border-color: var(--magenta);
+    box-shadow: var(--glow-magenta);
+    color: var(--magenta);
+  }
+
+  /* ============================================================
+     VOICE COMMAND INDICATOR
+  ============================================================ */
+  #voice-indicator {
+    position: fixed;
+    bottom: 28px; right: 278px;
+    z-index: 20;
+    display: flex; align-items: center; gap: 10px;
+    background: rgba(11,12,16,0.85);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,153,0,0.25);
+    border-radius: var(--radius-md);
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+  #voice-indicator:hover { border-color: var(--amber); box-shadow: var(--glow-amber); }
+  #voice-indicator.listening {
+    border-color: var(--amber);
+    box-shadow: var(--glow-amber);
+    animation: voice-pulse 1.5s ease-in-out infinite;
+  }
+  @keyframes voice-pulse {
+    0%,100% { box-shadow: 0 0 8px rgba(255,153,0,0.4); }
+    50%      { box-shadow: 0 0 24px rgba(255,153,0,0.8); }
+  }
+  .voice-bars {
+    display: flex; align-items: flex-end; gap: 3px; height: 20px;
+  }
+  .voice-bar {
+    width: 3px; background: var(--amber); border-radius: 2px;
+    transition: height 0.1s ease;
+    box-shadow: 0 0 6px var(--amber);
+  }
+  .voice-label {
+    font-family: var(--font-mono);
+    font-size: 10px; color: rgba(255,255,255,0.5);
+  }
+  .voice-label.active { color: var(--amber); }
+
+  /* ============================================================
+     MAIN AREA (transparent — just for layout)
+  ============================================================ */
+  #main-area {
+    grid-area: main;
+    position: relative; z-index: 5;
+    pointer-events: none;
+  }
+
+  /* Scrollable panel sections */
+  .panel { overflow-y: auto; }
+  .panel::-webkit-scrollbar { width: 3px; }
+  .panel::-webkit-scrollbar-thumb { background: rgba(0,240,255,0.2); border-radius: 99px; }
+
+  /* ============================================================
+     PHYSICS FLOOR INDICATOR
+  ============================================================ */
+  #floor-indicator {
+    position: fixed;
+    bottom: 80px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 15;
+    font-family: var(--font-mono);
+    font-size: 10px; color: rgba(0,255,102,0.6);
+    letter-spacing: 0.1em;
+    display: none;
+    align-items: center; gap: 6px;
+  }
+  #floor-indicator.visible { display: flex; }
+
+  /* ============================================================
+     SELECTED OBJECT RING (screen overlay)
+  ============================================================ */
+  #selection-ring {
+    position: fixed;
+    z-index: 8;
+    pointer-events: none;
+    border: 2px solid var(--cyan);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--glow-cyan), inset 0 0 20px rgba(0,240,255,0.05);
+    transition: all 0.1s ease;
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+<!-- LOADING SCREEN -->
+<div id="loading-screen">
+  <div class="loading-logo">✦ GESTURE AR STUDIO</div>
+  <div class="loading-ring"></div>
+  <div class="loading-status" id="loading-status">Initializing modules…</div>
+</div>
+
+<!-- GESTURE GUIDE OVERLAY -->
+<div id="gesture-guide" style="display:none;">
+  <div class="guide-title">✦ GESTURE AR STUDIO</div>
+  <div class="guide-subtitle">Control 3D objects with your hands — no controllers needed</div>
+  <div class="guide-grid">
+    <div class="guide-card">
+      <div class="guide-gesture">✋</div>
+      <div class="guide-gesture-name">OPEN PALM</div>
+      <div class="guide-gesture-desc">Hover &amp; select objects near your hand</div>
+    </div>
+    <div class="guide-card">
+      <div class="guide-gesture">🤏</div>
+      <div class="guide-gesture-name">PINCH</div>
+      <div class="guide-gesture-desc">Grab &amp; drag selected object</div>
+    </div>
+    <div class="guide-card">
+      <div class="guide-gesture">👆</div>
+      <div class="guide-gesture-name">POINT</div>
+      <div class="guide-gesture-desc">Teleport object to pointed location</div>
+    </div>
+    <div class="guide-card">
+      <div class="guide-gesture">✊</div>
+      <div class="guide-gesture-name">FIST</div>
+      <div class="guide-gesture-desc">Delete selected object</div>
+    </div>
+    <div class="guide-card">
+      <div class="guide-gesture">🖐️</div>
+      <div class="guide-gesture-name">SPREAD</div>
+      <div class="guide-gesture-desc">Scale up selected object</div>
+    </div>
+    <div class="guide-card">
+      <div class="guide-gesture">🤙</div>
+      <div class="guide-gesture-name">WRIST TWIST</div>
+      <div class="guide-gesture-desc">Rotate object along Y-axis</div>
+    </div>
+    <div class="guide-card">
+      <div class="guide-gesture">🤞</div>
+      <div class="guide-gesture-name">DOUBLE PINCH</div>
+      <div class="guide-gesture-desc">Duplicate selected object</div>
+    </div>
+    <div class="guide-card">
+      <div class="guide-gesture">👐</div>
+      <div class="guide-gesture-name">TWO-HAND GRAB</div>
+      <div class="guide-gesture-desc">Precise scale &amp; rotate with both hands</div>
+    </div>
+  </div>
+  <button class="guide-start-btn" onclick="startApp()">LAUNCH STUDIO ✦</button>
+</div>
+
+<!-- CAMERA + CANVAS LAYER -->
+<video id="camera-bg" autoplay muted playsinline></video>
+<canvas id="three-canvas"></canvas>
+<canvas id="mediapipe-canvas"></canvas>
+
+<!-- MAIN APP UI -->
+<div id="app">
+
+  <!-- HEADER -->
+  <header id="header">
+    <div class="logo">
+      <div class="logo-icon">✦</div>
+      GESTURE AR STUDIO
+    </div>
+    <div class="header-center">
+      <div class="mode-pill active" id="tracking-pill">
+        <div class="status-dot" id="tracking-dot"></div>
+        <span id="tracking-label">TRACKING</span>
+      </div>
+      <div class="mode-pill" id="physics-pill" onclick="togglePhysics()">
+        <span>⚛</span> PHYSICS
+      </div>
+      <div class="mode-pill" id="debug-pill" onclick="toggleDebug()">
+        <span>🔬</span> DEBUG
+      </div>
+    </div>
+    <div class="header-right">
+      <button class="hdr-btn" onclick="undoAction()">↩ UNDO</button>
+      <button class="hdr-btn" onclick="redoAction()">↪ REDO</button>
+      <button class="hdr-btn primary" onclick="clearScene()">⌫ CLEAR</button>
+      <button class="hdr-btn primary" onclick="exportScene()">⬇ EXPORT</button>
+    </div>
+  </header>
+
+  <!-- LEFT PANEL -->
+  <aside class="panel" id="left-panel">
+
+    <div class="panel-section">
+      <div class="panel-label">Objects</div>
+      <div class="shape-grid" id="shape-grid">
+        <div class="shape-btn selected" data-shape="cube" onclick="selectShape(this,'cube')">
+          🧊<span>Cube</span>
+        </div>
+        <div class="shape-btn" data-shape="sphere" onclick="selectShape(this,'sphere')">
+          ⚽<span>Sphere</span>
+        </div>
+        <div class="shape-btn" data-shape="cylinder" onclick="selectShape(this,'cylinder')">
+          🥫<span>Cylinder</span>
+        </div>
+        <div class="shape-btn" data-shape="cone" onclick="selectShape(this,'cone')">
+          🔺<span>Cone</span>
+        </div>
+        <div class="shape-btn" data-shape="torus" onclick="selectShape(this,'torus')">
+          🍩<span>Torus</span>
+        </div>
+        <div class="shape-btn" data-shape="pyramid" onclick="selectShape(this,'pyramid')">
+          ▲<span>Pyramid</span>
+        </div>
+        <div class="shape-btn" data-shape="capsule" onclick="selectShape(this,'capsule')">
+          💊<span>Capsule</span>
+        </div>
+        <div class="shape-btn" data-shape="plane" onclick="selectShape(this,'plane')">
+          ⬛<span>Plane</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-label">Materials</div>
+      <div class="material-row" id="material-row">
+        <div class="mat-btn selected" data-mat="holographic" onclick="selectMaterial(this,'holographic')">✨<span>Holo</span></div>
+        <div class="mat-btn" data-mat="glass" onclick="selectMaterial(this,'glass')">🪟<span>Glass</span></div>
+        <div class="mat-btn" data-mat="metal" onclick="selectMaterial(this,'metal')">🔩<span>Metal</span></div>
+        <div class="mat-btn" data-mat="neon" onclick="selectMaterial(this,'neon')">💡<span>Neon</span></div>
+        <div class="mat-btn" data-mat="wood" onclick="selectMaterial(this,'wood')">🪵<span>Wood</span></div>
+        <div class="mat-btn" data-mat="plastic" onclick="selectMaterial(this,'plastic')">🔵<span>Plastic</span></div>
+        <div class="mat-btn" data-mat="chrome" onclick="selectMaterial(this,'chrome')">🪞<span>Chrome</span></div>
+        <div class="mat-btn" data-mat="carbon" onclick="selectMaterial(this,'carbon')">⬛<span>Carbon</span></div>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-label">Color</div>
+      <div class="color-palette" id="color-palette">
+        <div class="color-swatch selected" data-color="#00F0FF" style="background:#00F0FF;" onclick="selectColor(this,'#00F0FF')"></div>
+        <div class="color-swatch" data-color="#FF007F" style="background:#FF007F;" onclick="selectColor(this,'#FF007F')"></div>
+        <div class="color-swatch" data-color="#00FF66" style="background:#00FF66;" onclick="selectColor(this,'#00FF66')"></div>
+        <div class="color-swatch" data-color="#FF9900" style="background:#FF9900;" onclick="selectColor(this,'#FF9900')"></div>
+        <div class="color-swatch" data-color="#FFFFFF" style="background:#FFFFFF;" onclick="selectColor(this,'#FFFFFF')"></div>
+        <div class="color-swatch" data-color="#1A1A24" style="background:#1A1A24;border:1px solid rgba(255,255,255,0.2);" onclick="selectColor(this,'#1A1A24')"></div>
+        <div class="color-swatch" data-color="#9900FF" style="background:#9900FF;" onclick="selectColor(this,'#9900FF')"></div>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-label">Size</div>
+      <div class="slider-row">
+        <div class="slider-label"><span>Scale</span><span id="scale-val">1.0×</span></div>
+        <input type="range" id="scale-slider" min="0.2" max="3" step="0.05" value="1"
+               oninput="onScaleSlider(this.value)">
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-label">Spawn</div>
+      <button class="hdr-btn primary" style="width:100%;padding:10px;"
+              onclick="spawnObject()">＋ SPAWN OBJECT</button>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-label">Scene Objects (<span id="obj-count">0</span>)</div>
+      <div id="scene-list" style="display:flex;flex-direction:column;gap:5px;max-height:120px;overflow-y:auto;"></div>
+    </div>
+
+  </aside>
+
+  <!-- MAIN AREA (camera + 3D renders here) -->
+  <main id="main-area"></main>
+
+  <!-- RIGHT PANEL -->
+  <aside class="panel" id="right-panel">
+
+    <div class="panel-section">
+      <div class="panel-label">Performance</div>
+      <div class="fps-bar">
+        <div class="fps-fill" id="fps-fill" style="width:100%"></div>
+        <div class="fps-label" id="fps-label">-- FPS</div>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="metric-card"><span class="metric-name">FRAME TIME</span><span class="metric-value" id="m-frametime">--ms</span></div>
+      <div class="metric-card"><span class="metric-name">OBJECTS</span><span class="metric-value green" id="m-objects">0</span></div>
+      <div class="metric-card"><span class="metric-name">POLYGONS</span><span class="metric-value" id="m-polys">0</span></div>
+      <div class="metric-card"><span class="metric-name">DRAW CALLS</span><span class="metric-value amber" id="m-draws">0</span></div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-label">Hand Tracking</div>
+      <div class="metric-card"><span class="metric-name">HANDS DETECTED</span><span class="metric-value green" id="m-hands">0</span></div>
+      <div class="metric-card"><span class="metric-name">LANDMARKS</span><span class="metric-value" id="m-landmarks">0</span></div>
+      <div class="metric-card"><span class="metric-name">TRACKING CONF.</span><span class="metric-value green" id="m-trackconf">--%</span></div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-label">Gesture Recognition</div>
+      <div class="metric-card"><span class="metric-name">CURRENT GESTURE</span><span class="metric-value" id="m-gesture">NONE</span></div>
+      <div class="metric-card"><span class="metric-name">GESTURE CONF.</span><span class="metric-value" id="m-gestconf">--%</span></div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-label">Physics</div>
+      <div class="metric-card"><span class="metric-name">GRAVITY</span><span class="metric-value amber" id="m-gravity">OFF</span></div>
+      <div class="metric-card"><span class="metric-name">COLLISIONS</span><span class="metric-value" id="m-collisions">0</span></div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-label">Selected Object</div>
+      <div class="metric-card"><span class="metric-name">TYPE</span><span class="metric-value" id="m-seltype">None</span></div>
+      <div class="metric-card"><span class="metric-name">MATERIAL</span><span class="metric-value" id="m-selmat">--</span></div>
+      <div class="slider-row" style="margin-top:4px;">
+        <div class="slider-label"><span>Opacity</span><span id="opacity-val">100%</span></div>
+        <input type="range" id="opacity-slider" min="0.1" max="1" step="0.05" value="1"
+               oninput="onOpacitySlider(this.value)">
+      </div>
+      <div class="slider-row">
+        <div class="slider-label"><span>Emissive</span><span id="emissive-val">0%</span></div>
+        <input type="range" id="emissive-slider" min="0" max="1" step="0.05" value="0"
+               oninput="onEmissiveSlider(this.value)">
+      </div>
+      <div style="display:flex;gap:6px;margin-top:4px;">
+        <button class="tool-btn" title="Lock/Unlock" onclick="lockSelected()" style="flex:1;">🔒</button>
+        <button class="tool-btn" title="Duplicate" onclick="duplicateSelected()" style="flex:1;">⧉</button>
+        <button class="tool-btn danger" title="Delete" onclick="deleteSelected()" style="flex:1;">🗑</button>
+      </div>
+    </div>
+
+  </aside>
+</div>
+
+<!-- TOOLBAR -->
+<div id="toolbar">
+  <div class="tool-btn active" id="btn-select" title="Select Mode" onclick="setMode('select')">↖</div>
+  <div class="tool-btn" id="btn-move" title="Move Mode" onclick="setMode('move')">✥</div>
+  <div class="tool-btn" id="btn-rotate" title="Rotate Mode" onclick="setMode('rotate')">↻</div>
+  <div class="tool-btn" id="btn-scale" title="Scale Mode" onclick="setMode('scale')">⤡</div>
+  <div class="tool-btn" id="btn-debug" title="Toggle Landmarks" onclick="toggleDebug()">⬡</div>
+</div>
+
+<!-- GESTURE HUD -->
+<div id="gesture-hud">
+  <div class="gesture-display" id="gesture-display">
+    <div class="gesture-icon" id="gesture-icon">✋</div>
+    <div class="gesture-info">
+      <div class="gesture-name" id="gesture-name">READY</div>
+      <div class="gesture-action" id="gesture-action">Show hand to camera</div>
+    </div>
+  </div>
+  <div class="confidence-bar-wrap" style="padding:0 4px;">
+    <div class="confidence-bar-bg"><div class="confidence-bar-fill" id="conf-bar" style="width:0%"></div></div>
+    <div class="confidence-pct" id="conf-pct">0%</div>
+  </div>
+</div>
+
+<!-- VOICE INDICATOR -->
+<div id="voice-indicator" onclick="toggleVoice()">
+  <div class="voice-bars" id="voice-bars">
+    <div class="voice-bar" style="height:6px"></div>
+    <div class="voice-bar" style="height:10px"></div>
+    <div class="voice-bar" style="height:7px"></div>
+    <div class="voice-bar" style="height:14px"></div>
+    <div class="voice-bar" style="height:8px"></div>
+  </div>
+  <div class="voice-label" id="voice-label">VOICE OFF</div>
+</div>
+
+<!-- FLOOR INDICATOR -->
+<div id="floor-indicator">
+  <span>⬇</span><span>VIRTUAL FLOOR DETECTED</span>
+</div>
+
+<!-- OBJECT TOOLTIP -->
+<div id="obj-tooltip">
+  <div class="tooltip-title" id="tt-title">OBJECT</div>
+  <div class="tooltip-row"><span>Type</span><span id="tt-type">--</span></div>
+  <div class="tooltip-row"><span>Material</span><span id="tt-mat">--</span></div>
+  <div class="tooltip-row"><span>Position</span><span id="tt-pos">--</span></div>
+  <div class="tooltip-row"><span>Scale</span><span id="tt-scale">--</span></div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div id="toast-container"></div>
+
+<!-- SELECTION RING -->
+<div id="selection-ring"></div>
+
+<!-- ============================================================
+     SCRIPTS
+============================================================ -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ================================================================
+//  GestureAR Studio — Production Engine
+//  Architecture:
+//    - Three.js r128 rendering engine
+//    - MediaPipe Hands for hand tracking (CDN)
+//    - Custom gesture classifier
+//    - Simple physics / gravity simulation
+//    - Voice command via Web Speech API
+// ================================================================
+
+'use strict';
+
+// ---------------------------------------------------------------
+//  GLOBALS & STATE
+// ---------------------------------------------------------------
+const APP = {
+  // Scene
+  scene: null, camera: null, renderer: null,
+  objects: [],          // { mesh, id, type, material, locked, velocity }
+  selectedId: null,
+  nextId: 1,
+  mode: 'select',       // select | move | rotate | scale
+
+  // Hand tracking
+  hands: null,
+  handResults: null,
+  debugMode: false,
+  trackingActive: false,
+
+  // Gesture
+  currentGesture: { name: 'NONE', icon: '✋', action: '', confidence: 0 },
+  gestureHistory: [],   // rolling buffer for debounce
+  gestureHoldFrames: 0,
+  lastGestureTime: 0,
+  gestureCooldown: 500,
+
+  // Physics
+  physicsEnabled: false,
+  gravity: -0.003,
+  floorY: -2.5,
+
+  // Voice
+  voiceActive: false,
+  recognition: null,
+
+  // Undo/Redo
+  undoStack: [],
+  redoStack: [],
+
+  // Performance
+  fps: 0, frameTime: 0,
+  fpsHistory: [],
+  lastFrameTs: 0,
+
+  // Interaction state
+  grabbedId: null,
+  grabOffset: { x:0, y:0, z:0 },
+  twoHandMode: false,
+  twoHandDist: 0,
+  twoHandMidpoint: { x:0, y:0, z:0 },
+
+  // Spawn config
+  spawnShape: 'cube',
+  spawnMaterial: 'holographic',
+  spawnColor: '#00F0FF',
+  spawnScale: 1.0,
+
+  // Misc
+  loadedMediaPipe: false,
+  animFrameId: null,
+};
+
+// ---------------------------------------------------------------
+//  LOADING SEQUENCE
+// ---------------------------------------------------------------
+const loadingMsgs = [
+  'Initializing WebGL renderer…',
+  'Loading Three.js scene…',
+  'Requesting camera access…',
+  'Loading MediaPipe Hands…',
+  'Calibrating gesture engine…',
+  'Compiling shader programs…',
+  'Building physics world…',
+  'All systems ready ✦',
+];
+let loadStep = 0;
+function nextLoadStep(msg) {
+  document.getElementById('loading-status').textContent = msg || loadingMsgs[loadStep] || 'Ready';
+  loadStep++;
+}
+
+// ---------------------------------------------------------------
+//  BOOT
+// ---------------------------------------------------------------
+async function boot() {
+  nextLoadStep(loadingMsgs[0]);
+  initThree();
+  nextLoadStep(loadingMsgs[1]);
+  await startCamera();
+  nextLoadStep(loadingMsgs[2]);
+  await loadMediaPipe();
+  nextLoadStep(loadingMsgs[3]);
+  initVoice();
+  nextLoadStep(loadingMsgs[6]);
+  startRenderLoop();
+  nextLoadStep(loadingMsgs[7]);
+
+  // Hide loading, show guide
+  setTimeout(() => {
+    document.getElementById('loading-screen').style.opacity = '0';
+    document.getElementById('loading-screen').style.transition = '0.8s ease';
+    setTimeout(() => {
+      document.getElementById('loading-screen').style.display = 'none';
+      document.getElementById('gesture-guide').style.display = 'flex';
+    }, 800);
+  }, 1200);
+}
+
+function startApp() {
+  document.getElementById('gesture-guide').style.opacity = '0';
+  document.getElementById('gesture-guide').style.transition = '0.6s ease';
+  setTimeout(() => {
+    document.getElementById('gesture-guide').style.display = 'none';
+  }, 600);
+  toast('GestureAR Studio ready ✦', 'cyan');
+  spawnObject(); // spawn initial cube
+}
+
+// ---------------------------------------------------------------
+//  THREE.JS SCENE SETUP
+// ---------------------------------------------------------------
+function initThree() {
+  const canvas = document.getElementById('three-canvas');
+  APP.renderer = new THREE.WebGLRenderer({
+    canvas,
+    alpha: true,
+    antialias: true,
+    powerPreference: 'high-performance',
+  });
+  APP.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  APP.renderer.setSize(window.innerWidth, window.innerHeight);
+  APP.renderer.shadowMap.enabled = true;
+  APP.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  APP.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  APP.renderer.toneMappingExposure = 1.2;
+
+  APP.scene = new THREE.Scene();
+
+  APP.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.01, 100);
+  APP.camera.position.set(0, 0, 4);
+
+  // Lights
+  const ambient = new THREE.AmbientLight(0x112233, 1.5);
+  APP.scene.add(ambient);
+
+  const dirLight = new THREE.DirectionalLight(0x00F0FF, 2.5);
+  dirLight.position.set(5, 10, 5);
+  dirLight.castShadow = true;
+  dirLight.shadow.mapSize.set(1024, 1024);
+  dirLight.shadow.camera.near = 0.1;
+  dirLight.shadow.camera.far = 50;
+  dirLight.shadow.bias = -0.0005;
+  APP.scene.add(dirLight);
+
+  const fillLight = new THREE.PointLight(0xFF007F, 1.5, 20);
+  fillLight.position.set(-4, -2, 3);
+  APP.scene.add(fillLight);
+
+  const backLight = new THREE.PointLight(0x00FF66, 0.8, 15);
+  backLight.position.set(0, 5, -5);
+  APP.scene.add(backLight);
+
+  // Virtual floor (hidden plane for shadows/physics)
+  const floorGeo = new THREE.PlaneGeometry(30, 30);
+  const floorMat = new THREE.ShadowMaterial({ opacity: 0.25 });
+  const floor = new THREE.Mesh(floorGeo, floorMat);
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.y = APP.floorY;
+  floor.receiveShadow = true;
+  floor.userData.isFloor = true;
+  APP.scene.add(floor);
+
+  window.addEventListener('resize', onResize);
+}
+
+function onResize() {
+  APP.camera.aspect = window.innerWidth / window.innerHeight;
+  APP.camera.updateProjectionMatrix();
+  APP.renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+// ---------------------------------------------------------------
+//  CAMERA ACCESS
+// ---------------------------------------------------------------
+async function startCamera() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' },
+      audio: false,
+    });
+    const video = document.getElementById('camera-bg');
+    video.srcObject = stream;
+    await new Promise(r => video.onloadedmetadata = r);
+    document.getElementById('tracking-dot').classList.remove('red');
+    return true;
+  } catch (e) {
+    document.getElementById('tracking-dot').className = 'status-dot red';
+    document.getElementById('tracking-label').textContent = 'NO CAMERA';
+    toast('Camera access denied — AR features limited', 'red');
+    return false;
+  }
+}
+
+// ---------------------------------------------------------------
+//  MEDIAPIPE HANDS (CDN loaded dynamically)
+// ---------------------------------------------------------------
+async function loadMediaPipe() {
+  return new Promise((resolve) => {
+    // Load MediaPipe from CDN
+    const script1 = document.createElement('script');
+    script1.src = 'https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/hands.js';
+    script1.onload = () => {
+      const script2 = document.createElement('script');
+      script2.src = 'https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1675466862/camera_utils.js';
+      script2.onload = () => {
+        const script3 = document.createElement('script');
+        script3.src = 'https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils@0.3.1675466124/drawing_utils.js';
+        script3.onload = () => {
+          initMediaPipe();
+          resolve();
+        };
+        script3.onerror = () => { resolve(); }; // graceful fallback
+        document.head.appendChild(script3);
+      };
+      script2.onerror = () => { resolve(); };
+      document.head.appendChild(script2);
+    };
+    script1.onerror = () => {
+      toast('MediaPipe unavailable — using mock tracking', 'amber');
+      startMockTracking();
+      resolve();
+    };
+    document.head.appendChild(script1);
+  });
+}
+
+function initMediaPipe() {
+  if (typeof Hands === 'undefined') { startMockTracking(); return; }
+
+  APP.hands = new Hands({
+    locateFile: (f) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/${f}`
+  });
+
+  APP.hands.setOptions({
+    maxNumHands: 2,
+    modelComplexity: 1,
+    minDetectionConfidence: 0.7,
+    minTrackingConfidence: 0.6,
+  });
+
+  APP.hands.onResults(onHandResults);
+
+  const video = document.getElementById('camera-bg');
+
+  if (typeof Camera !== 'undefined') {
+    const cam = new Camera(video, {
+      onFrame: async () => { await APP.hands.send({ image: video }); },
+      width: 640, height: 480,
+    });
+    cam.start();
+    APP.loadedMediaPipe = true;
+    APP.trackingActive = true;
+    document.getElementById('tracking-dot').className = 'status-dot';
+    document.getElementById('tracking-label').textContent = 'TRACKING';
+  } else {
+    startMockTracking();
+  }
+}
+
+// ---------------------------------------------------------------
+//  HAND RESULTS PROCESSING
+// ---------------------------------------------------------------
+function onHandResults(results) {
+  APP.handResults = results;
+  APP.trackingActive = true;
+
+  const canvas = document.getElementById('mediapipe-canvas');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const numHands = results.multiHandLandmarks ? results.multiHandLandmarks.length : 0;
+  document.getElementById('m-hands').textContent = numHands;
+  document.getElementById('m-landmarks').textContent = numHands * 21;
+
+  if (numHands === 0) {
+    updateGestureHUD('NONE', '✋', 'Show hand to camera', 0);
+    document.getElementById('m-trackconf').textContent = '0%';
+    document.getElementById('m-gesture').textContent = 'NONE';
+    document.getElementById('m-gestconf').textContent = '0%';
+    APP.grabbedId = null;
+    return;
+  }
+
+  const lms0 = results.multiHandLandmarks[0];
+  const trackConf = results.multiHandWorldLandmarks && results.multiHandWorldLandmarks[0] ? 95 : 85;
+  document.getElementById('m-trackconf').textContent = trackConf + '%';
+
+  // Debug overlay
+  if (APP.debugMode && typeof drawConnectors !== 'undefined') {
+    for (const lms of results.multiHandLandmarks) {
+      drawConnectors(ctx, lms, HAND_CONNECTIONS, {
+        color: 'rgba(0,240,255,0.6)', lineWidth: 2,
+      });
+      drawLandmarks(ctx, lms, {
+        color: 'rgba(0,255,102,0.9)', lineWidth: 1, radius: 4,
+      });
+    }
+  }
+
+  // Two-hand mode
+  if (numHands === 2) {
+    processTwoHands(results.multiHandLandmarks[0], results.multiHandLandmarks[1], ctx);
+  }
+
+  // Gesture classification
+  const gesture = classifyGesture(lms0);
+  document.getElementById('m-gesture').textContent = gesture.name;
+  document.getElementById('m-gestconf').textContent = Math.round(gesture.confidence * 100) + '%';
+  updateGestureHUD(gesture.name, gesture.icon, gesture.action, gesture.confidence);
+
+  // Map hand position to scene coords
+  const handPos = landmarkToScene(lms0[9]); // palm center
+
+  // Gesture actions
+  handleGestureAction(gesture, handPos, lms0);
+}
+
+// ---------------------------------------------------------------
+//  LANDMARK → SCENE COORDINATE MAPPING
+// ---------------------------------------------------------------
+function landmarkToScene(lm) {
+  // lm.x, lm.y are normalized [0,1] (mirrored)
+  const x = (0.5 - lm.x) * 6;   // [-3, +3]
+  const y = (0.5 - lm.y) * 4;   // [-2, +2]
+  const z = lm.z * -5 + 1;      // approx depth
+  return new THREE.Vector3(x, y, z);
+}
+
+// ---------------------------------------------------------------
+//  GESTURE CLASSIFIER
+// ---------------------------------------------------------------
+function classifyGesture(lms) {
+  if (!lms || lms.length < 21) return { name:'NONE', icon:'✋', action:'', confidence:0 };
+
+  // Finger tip / pip landmarks
+  const tips = [4, 8, 12, 16, 20];
+  const pips = [3, 6, 10, 14, 18];
+  const mcps = [2, 5, 9, 13, 17];
+  const wrist = lms[0];
+
+  function dist(a, b) {
+    return Math.sqrt((a.x-b.x)**2 + (a.y-b.y)**2 + (a.z-b.z)**2);
+  }
+
+  // Determine if each finger is extended
+  const extended = [
+    // Thumb: tip x vs mcp x (mirrored hand)
+    dist(lms[4], lms[0]) > dist(lms[3], lms[0]) * 1.1,
+    lms[8].y < lms[6].y,   // index
+    lms[12].y < lms[10].y, // middle
+    lms[16].y < lms[14].y, // ring
+    lms[20].y < lms[18].y, // pinky
+  ];
+
+  const numExtended = extended.filter(Boolean).length;
+
+  // Pinch detection (thumb–index distance)
+  const pinchDist = dist(lms[4], lms[8]);
+  const isPinching = pinchDist < 0.06;
+
+  // Double-pinch (thumb–index AND middle raised)
+  const isDoublePinch = isPinching && lms[12].y < lms[10].y;
+
+  // Wrist rotation — use wrist.z as proxy for rotation amount
+  const wristAngle = lms[0].z;
+
+  // --- GESTURE RULES ---
+
+  // FIST: all fingers curled
+  if (!extended[0] && !extended[1] && !extended[2] && !extended[3] && !extended[4]) {
+    return { name:'FIST', icon:'✊', action:'Delete selected object', confidence:0.92 };
+  }
+
+  // PINCH
+  if (isPinching) {
+    if (isDoublePinch) {
+      return { name:'DOUBLE PINCH', icon:'🤞', action:'Duplicate object', confidence:0.88 };
+    }
+    return { name:'PINCH', icon:'🤏', action:'Grab & drag object', confidence:0.90 };
+  }
+
+  // POINT: only index extended
+  if (extended[1] && !extended[2] && !extended[3] && !extended[4]) {
+    return { name:'POINT', icon:'☝️', action:'Teleport object', confidence:0.88 };
+  }
+
+  // OPEN PALM: all extended
+  if (extended[0] && extended[1] && extended[2] && extended[3] && extended[4]) {
+    return { name:'OPEN PALM', icon:'✋', action:'Select / hover', confidence:0.95 };
+  }
+
+  // SPREAD: all extended + spread
+  if (numExtended === 5) {
+    const spread = dist(lms[4], lms[20]);
+    if (spread > 0.35) {
+      return { name:'SPREAD', icon:'🖐️', action:'Scale up', confidence:0.85 };
+    }
+  }
+
+  // THUMBS UP
+  if (extended[0] && !extended[1] && !extended[2] && !extended[3] && !extended[4]) {
+    return { name:'THUMBS UP', icon:'👍', action:'Confirm / lock', confidence:0.87 };
+  }
+
+  // PEACE
+  if (!extended[0] && extended[1] && extended[2] && !extended[3] && !extended[4]) {
+    return { name:'PEACE', icon:'✌️', action:'Spawn new object', confidence:0.85 };
+  }
+
+  // ROCK (index + pinky)
+  if (!extended[0] && extended[1] && !extended[2] && !extended[3] && extended[4]) {
+    return { name:'ROCK', icon:'🤘', action:'Rotate object', confidence:0.83 };
+  }
+
+  return { name:'OPEN PALM', icon:'✋', action:'Hover', confidence: 0.5 + numExtended * 0.08 };
+}
+
+// ---------------------------------------------------------------
+//  GESTURE ACTION HANDLER
+// ---------------------------------------------------------------
+let gestureActionCooldown = 0;
+
+function handleGestureAction(gesture, handPos, lms) {
+  const now = Date.now();
+  const sel = getSelectedObject();
+
+  // Update gesture history for debounce
+  APP.gestureHistory.push(gesture.name);
+  if (APP.gestureHistory.length > 6) APP.gestureHistory.shift();
+
+  // Require 4 consecutive same gesture
+  const stableGesture = APP.gestureHistory.filter(g => g === gesture.name).length >= 4;
+  if (!stableGesture) return;
+
+  // Global cooldown
+  if (now - gestureActionCooldown < 80) return;
+  gestureActionCooldown = now;
+
+  switch (gesture.name) {
+
+    case 'OPEN PALM':
+    case 'SPREAD': {
+      // Hover selection — find nearest object
+      const nearest = findNearestObject(handPos, 0.8);
+      if (nearest && nearest.id !== APP.selectedId) {
+        selectObject(nearest.id);
+        showTooltip(nearest);
+      }
+      if (gesture.name === 'SPREAD' && sel) {
+        sel.mesh.scale.multiplyScalar(1.008);
+        updateScaleSlider(sel.mesh.scale.x);
+      }
+      APP.grabbedId = null;
+      break;
+    }
+
+    case 'PINCH': {
+      if (!APP.grabbedId) {
+        // Start grab
+        const nearest = findNearestObject(handPos, 1.2);
+        if (nearest && !nearest.locked) {
+          APP.grabbedId = nearest.id;
+          pushUndo();
+          toast('Grabbing ' + nearest.type, 'cyan');
+        }
+      } else {
+        // Continue drag
+        const grabbed = APP.objects.find(o => o.id === APP.grabbedId);
+        if (grabbed && !grabbed.locked) {
+          grabbed.mesh.position.lerp(handPos, 0.35);
+          grabbed.velocity = { x:0, y:0, z:0 };
+        }
+      }
+      break;
+    }
+
+    case 'DOUBLE PINCH': {
+      if (sel && now - APP.lastGestureTime > 1200) {
+        duplicateSelected();
+        APP.lastGestureTime = now;
+      }
+      break;
+    }
+
+    case 'FIST': {
+      APP.grabbedId = null;
+      if (sel && now - APP.lastGestureTime > 1000) {
+        deleteSelected();
+        APP.lastGestureTime = now;
+      }
+      break;
+    }
+
+    case 'POINT': {
+      APP.grabbedId = null;
+      if (sel && now - APP.lastGestureTime > 800) {
+        // Teleport to hand position
+        pushUndo();
+        sel.mesh.position.lerp(handPos, 0.15);
+        APP.lastGestureTime = now;
+      }
+      break;
+    }
+
+    case 'PEACE': {
+      if (now - APP.lastGestureTime > 1500) {
+        spawnObject();
+        APP.lastGestureTime = now;
+      }
+      break;
+    }
+
+    case 'ROCK': {
+      if (sel) {
+        sel.mesh.rotation.y += 0.04;
+      }
+      break;
+    }
+
+    case 'THUMBS UP': {
+      if (sel && now - APP.lastGestureTime > 800) {
+        lockSelected();
+        APP.lastGestureTime = now;
+      }
+      break;
+    }
+  }
+
+  // Release grab when no longer pinching
+  if (gesture.name !== 'PINCH' && gesture.name !== 'DOUBLE PINCH') {
+    APP.grabbedId = null;
+  }
+}
+
+// ---------------------------------------------------------------
+//  TWO-HAND PROCESSING
+// ---------------------------------------------------------------
+function processTwoHands(lms0, lms1, ctx) {
+  const pos0 = landmarkToScene(lms0[9]);
+  const pos1 = landmarkToScene(lms1[9]);
+
+  const g0 = classifyGesture(lms0);
+  const g1 = classifyGesture(lms1);
+
+  const sel = getSelectedObject();
+  if (!sel) return;
+
+  // Two-hand grab: both pinching
+  if (g0.name === 'PINCH' && g1.name === 'PINCH') {
+    const newDist = pos0.distanceTo(pos1);
+    const midpoint = new THREE.Vector3().addVectors(pos0, pos1).multiplyScalar(0.5);
+
+    if (APP.twoHandMode) {
+      // Scale by distance change
+      const scaleFactor = newDist / APP.twoHandDist;
+      sel.mesh.scale.multiplyScalar(scaleFactor);
+      sel.mesh.scale.clampScalar(0.1, 8);
+      updateScaleSlider(sel.mesh.scale.x);
+
+      // Move to midpoint
+      sel.mesh.position.lerp(midpoint, 0.2);
+    }
+
+    APP.twoHandMode = true;
+    APP.twoHandDist = newDist;
+    APP.twoHandMidpoint = midpoint;
+
+    // Draw two-hand line on debug canvas
+    if (APP.debugMode) {
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255,0,127,0.5)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([8, 4]);
+      ctx.beginPath();
+      const sx0 = (1 - lms0[9].x) * window.innerWidth;
+      const sy0 = lms0[9].y * window.innerHeight;
+      const sx1 = (1 - lms1[9].x) * window.innerWidth;
+      const sy1 = lms1[9].y * window.innerHeight;
+      ctx.moveTo(sx0, sy0); ctx.lineTo(sx1, sy1);
+      ctx.stroke();
+      ctx.restore();
+    }
+  } else {
+    APP.twoHandMode = false;
+  }
+}
+
+// ---------------------------------------------------------------
+//  MOCK TRACKING (fallback when MediaPipe unavailable)
+// ---------------------------------------------------------------
+let mockPhase = 0;
+function startMockTracking() {
+  APP.trackingActive = false;
+  document.getElementById('m-hands').textContent = '0';
+  document.getElementById('tracking-dot').className = 'status-dot amber';
+  document.getElementById('tracking-label').textContent = 'DEMO MODE';
+  toast('Hand tracking unavailable — use UI controls', 'amber');
+}
+
+// ---------------------------------------------------------------
+//  OBJECT MANAGEMENT
+// ---------------------------------------------------------------
+function createGeometry(type) {
+  switch (type) {
+    case 'cube':     return new THREE.BoxGeometry(1, 1, 1);
+    case 'sphere':   return new THREE.SphereGeometry(0.6, 32, 32);
+    case 'cylinder': return new THREE.CylinderGeometry(0.5, 0.5, 1.2, 32);
+    case 'cone':     return new THREE.ConeGeometry(0.6, 1.2, 32);
+    case 'torus':    return new THREE.TorusGeometry(0.5, 0.22, 20, 48);
+    case 'pyramid':  return new THREE.ConeGeometry(0.7, 1.2, 4);
+    case 'capsule':  return new THREE.CylinderGeometry(0.35, 0.35, 0.9, 24, 1, false);
+    case 'plane':    return new THREE.PlaneGeometry(1.5, 1.5, 4, 4);
+    default:         return new THREE.BoxGeometry(1, 1, 1);
+  }
+}
+
+function createMaterial(matType, color) {
+  const c = new THREE.Color(color || APP.spawnColor);
+  const hex = parseInt((color || APP.spawnColor).replace('#',''), 16);
+
+  switch (matType) {
+    case 'holographic':
+      return new THREE.MeshPhongMaterial({
+        color: c, emissive: c, emissiveIntensity: 0.4,
+        transparent: true, opacity: 0.75,
+        wireframe: false, shininess: 120,
+        side: THREE.DoubleSide,
+      });
+
+    case 'glass':
+      return new THREE.MeshPhysicalMaterial({
+        color: 0xffffff, transparent: true, opacity: 0.18,
+        roughness: 0.02, metalness: 0.0,
+        transmission: 0.9, thickness: 0.5,
+        envMapIntensity: 1.2, side: THREE.DoubleSide,
+      });
+
+    case 'metal':
+      return new THREE.MeshStandardMaterial({
+        color: c, metalness: 0.95, roughness: 0.08,
+        envMapIntensity: 1.2,
+      });
+
+    case 'neon':
+      return new THREE.MeshPhongMaterial({
+        color: c, emissive: c, emissiveIntensity: 1.2,
+        transparent: true, opacity: 0.9,
+        shininess: 200,
+      });
+
+    case 'wood':
+      return new THREE.MeshStandardMaterial({
+        color: 0x8B5A2B, roughness: 0.85, metalness: 0.0,
+      });
+
+    case 'plastic':
+      return new THREE.MeshStandardMaterial({
+        color: c, roughness: 0.45, metalness: 0.05,
+      });
+
+    case 'chrome':
+      return new THREE.MeshStandardMaterial({
+        color: 0xcccccc, metalness: 1.0, roughness: 0.02,
+        envMapIntensity: 2.0,
+      });
+
+    case 'carbon':
+      return new THREE.MeshStandardMaterial({
+        color: 0x1a1a1a, roughness: 0.7, metalness: 0.4,
+      });
+
+    default:
+      return new THREE.MeshStandardMaterial({ color: c, roughness: 0.5, metalness: 0.3 });
+  }
+}
+
+function spawnObject(type, matType, color) {
+  type = type || APP.spawnShape;
+  matType = matType || APP.spawnMaterial;
+  color = color || APP.spawnColor;
+
+  pushUndo();
+
+  const geo = createGeometry(type);
+  const mat = createMaterial(matType, color);
+  const mesh = new THREE.Mesh(geo, mat);
+
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+
+  // Spawn in front of camera with slight random spread
+  const rx = (Math.random() - 0.5) * 3;
+  const ry = (Math.random() - 0.5) * 1.5;
+  mesh.position.set(rx, ry, 0);
+  mesh.scale.setScalar(APP.spawnScale);
+
+  // Holographic edge wireframe
+  if (matType === 'holographic' || matType === 'neon') {
+    const edges = new THREE.EdgesGeometry(geo);
+    const lineMat = new THREE.LineBasicMaterial({
+      color: new THREE.Color(color), transparent: true, opacity: 0.6,
+    });
+    const wireframe = new THREE.LineSegments(edges, lineMat);
+    mesh.add(wireframe);
+  }
+
+  const id = APP.nextId++;
+  const obj = {
+    mesh, id,
+    type, material: matType, color,
+    locked: false,
+    velocity: { x: 0, y: 0, z: 0 },
+    angularVelocity: { x: (Math.random()-0.5)*0.02, y: (Math.random()-0.5)*0.02, z: 0 },
+    floatPhase: Math.random() * Math.PI * 2,
+    floatSpeed: 0.3 + Math.random() * 0.4,
+    floatAmp: 0.04 + Math.random() * 0.04,
+  };
+
+  APP.scene.add(mesh);
+  APP.objects.push(obj);
+  selectObject(id);
+  updateSceneList();
+  updateMetrics();
+  toast(`${type.charAt(0).toUpperCase()+type.slice(1)} spawned ✦`, 'green');
+  return obj;
+}
+
+function deleteSelected() {
+  if (!APP.selectedId) return;
+  pushUndo();
+  const obj = APP.objects.find(o => o.id === APP.selectedId);
+  if (!obj || obj.locked) { toast('Object is locked', 'amber'); return; }
+  APP.scene.remove(obj.mesh);
+  obj.mesh.geometry.dispose();
+  if (Array.isArray(obj.mesh.material)) obj.mesh.material.forEach(m=>m.dispose());
+  else obj.mesh.material.dispose();
+  APP.objects = APP.objects.filter(o => o.id !== APP.selectedId);
+  APP.selectedId = null;
+  updateSceneList(); updateMetrics();
+  toast('Object deleted', 'red');
+}
+
+function duplicateSelected() {
+  const sel = getSelectedObject();
+  if (!sel) return;
+  pushUndo();
+  const newObj = spawnObject(sel.type, sel.material, sel.color);
+  newObj.mesh.position.copy(sel.mesh.position);
+  newObj.mesh.position.x += 0.6;
+  newObj.mesh.scale.copy(sel.mesh.scale);
+  newObj.mesh.rotation.copy(sel.mesh.rotation);
+  toast('Object duplicated ⧉', 'cyan');
+}
+
+function lockSelected() {
+  const sel = getSelectedObject();
+  if (!sel) return;
+  sel.locked = !sel.locked;
+  toast(sel.locked ? '🔒 Object locked' : '🔓 Object unlocked', 'amber');
+  updateSceneList();
+}
+
+function clearScene() {
+  pushUndo();
+  for (const obj of APP.objects) {
+    APP.scene.remove(obj.mesh);
+    obj.mesh.geometry.dispose();
+  }
+  APP.objects = [];
+  APP.selectedId = null;
+  updateSceneList(); updateMetrics();
+  toast('Scene cleared', 'amber');
+}
+
+function getSelectedObject() {
+  return APP.objects.find(o => o.id === APP.selectedId);
+}
+
+function selectObject(id) {
+  APP.selectedId = id;
+  const obj = APP.objects.find(o => o.id === id);
+  if (obj) {
+    document.getElementById('m-seltype').textContent = obj.type.toUpperCase();
+    document.getElementById('m-selmat').textContent = obj.material.toUpperCase();
+    document.getElementById('opacity-slider').value = obj.mesh.material.opacity || 1;
+    document.getElementById('opacity-val').textContent = Math.round((obj.mesh.material.opacity||1)*100)+'%';
+  }
+}
+
+function findNearestObject(pos, maxDist) {
+  let nearest = null, minDist = maxDist;
+  for (const obj of APP.objects) {
+    const d = obj.mesh.position.distanceTo(pos);
+    if (d < minDist) { minDist = d; nearest = obj; }
+  }
+  return nearest;
+}
+
+// ---------------------------------------------------------------
+//  SCENE LIST UI
+// ---------------------------------------------------------------
+function updateSceneList() {
+  const list = document.getElementById('scene-list');
+  document.getElementById('obj-count').textContent = APP.objects.length;
+  list.innerHTML = '';
+  for (const obj of APP.objects) {
+    const item = document.createElement('div');
+    item.style.cssText = `
+      display:flex; align-items:center; justify-content:space-between;
+      padding:5px 8px; border-radius:6px; cursor:pointer;
+      background:${obj.id === APP.selectedId ? 'rgba(0,240,255,0.1)' : 'rgba(255,255,255,0.03)'};
+      border:1px solid ${obj.id === APP.selectedId ? 'rgba(0,240,255,0.3)' : 'rgba(255,255,255,0.06)'};
+      font-family:var(--font-mono); font-size:10px; color:rgba(255,255,255,0.7);
+    `;
+    item.innerHTML = `
+      <span>${obj.locked?'🔒':'⬡'} ${obj.type}</span>
+      <span style="color:rgba(255,255,255,0.3)">#${obj.id}</span>
+    `;
+    item.onclick = () => selectObject(obj.id);
+    list.appendChild(item);
+  }
+}
+
+// ---------------------------------------------------------------
+//  PHYSICS SIMULATION
+// ---------------------------------------------------------------
+function stepPhysics() {
+  if (!APP.physicsEnabled) return;
+  let collisions = 0;
+  for (const obj of APP.objects) {
+    if (obj.locked || obj.id === APP.grabbedId) continue;
+
+    // Gravity
+    obj.velocity.y += APP.gravity;
+
+    // Damping
+    obj.velocity.x *= 0.98;
+    obj.velocity.y *= 0.99;
+    obj.velocity.z *= 0.98;
+
+    // Apply velocity
+    obj.mesh.position.x += obj.velocity.x;
+    obj.mesh.position.y += obj.velocity.y;
+    obj.mesh.position.z += obj.velocity.z;
+
+    // Floor collision
+    const half = obj.mesh.scale.y * 0.5;
+    if (obj.mesh.position.y - half < APP.floorY) {
+      obj.mesh.position.y = APP.floorY + half;
+      obj.velocity.y *= -0.45; // restitution
+      obj.velocity.x *= 0.88; // friction
+      obj.velocity.z *= 0.88;
+      collisions++;
+    }
+
+    // Object–object collisions (simple sphere)
+    for (const other of APP.objects) {
+      if (other.id === obj.id) continue;
+      const d = obj.mesh.position.distanceTo(other.mesh.position);
+      const minD = (obj.mesh.scale.x + other.mesh.scale.x) * 0.55;
+      if (d < minD && d > 0) {
+        const dir = new THREE.Vector3().subVectors(obj.mesh.position, other.mesh.position).normalize();
+        const overlap = minD - d;
+        obj.mesh.position.addScaledVector(dir, overlap * 0.5);
+        other.mesh.position.addScaledVector(dir, -overlap * 0.5);
+        // Swap velocities (elastic)
+        const relVel = obj.velocity.y - other.velocity.y;
+        obj.velocity.y -= relVel * 0.4;
+        other.velocity.y += relVel * 0.4;
+        collisions++;
+      }
+    }
+  }
+  document.getElementById('m-collisions').textContent = collisions;
+}
+
+// ---------------------------------------------------------------
+//  FLOATING ANIMATION (non-physics mode)
+// ---------------------------------------------------------------
+function animateObjects(t) {
+  for (const obj of APP.objects) {
+    if (obj.locked || obj.id === APP.grabbedId || APP.physicsEnabled) continue;
+
+    // Gentle float
+    const floatY = Math.sin(t * obj.floatSpeed + obj.floatPhase) * obj.floatAmp;
+    obj.mesh.position.y += floatY * 0.1;
+
+    // Auto-rotation (slow)
+    if (obj.id !== APP.selectedId || APP.mode === 'select') {
+      obj.mesh.rotation.x += obj.angularVelocity.x * 0.5;
+      obj.mesh.rotation.y += obj.angularVelocity.y * 0.5;
+    }
+  }
+
+  // Stronger rotation when mode=rotate
+  if (APP.mode === 'rotate') {
+    const sel = getSelectedObject();
+    if (sel && !sel.locked) {
+      sel.mesh.rotation.y += 0.012;
+    }
+  }
+}
+
+// ---------------------------------------------------------------
+//  SELECTION HIGHLIGHT
+// ---------------------------------------------------------------
+function updateSelectionHighlight() {
+  const ring = document.getElementById('selection-ring');
+  const sel = getSelectedObject();
+  if (!sel) { ring.style.display = 'none'; return; }
+
+  // Project mesh to screen
+  const pos = sel.mesh.position.clone();
+  pos.project(APP.camera);
+  const sx = (pos.x + 1) / 2 * window.innerWidth;
+  const sy = (-pos.y + 1) / 2 * window.innerHeight;
+  const scale = sel.mesh.scale.x;
+  const size = Math.max(60, 80 * scale * (1 / (pos.z * 0.5 + 1)));
+
+  ring.style.display = 'block';
+  ring.style.left   = (sx - size/2) + 'px';
+  ring.style.top    = (sy - size/2) + 'px';
+  ring.style.width  = size + 'px';
+  ring.style.height = size + 'px';
+}
+
+// ---------------------------------------------------------------
+//  RENDER LOOP
+// ---------------------------------------------------------------
+function startRenderLoop() {
+  function frame(ts) {
+    APP.animFrameId = requestAnimationFrame(frame);
+
+    const dt = ts - (APP.lastFrameTs || ts);
+    APP.lastFrameTs = ts;
+    APP.frameTime = dt;
+
+    // FPS tracking
+    APP.fpsHistory.push(1000 / Math.max(dt, 1));
+    if (APP.fpsHistory.length > 60) APP.fpsHistory.shift();
+    APP.fps = Math.round(APP.fpsHistory.reduce((a,b)=>a+b,0) / APP.fpsHistory.length);
+
+    // Update systems
+    animateObjects(ts * 0.001);
+    stepPhysics();
+    updateSelectionHighlight();
+    updateMetrics();
+
+    // Auto-rotate non-grabbed objects gently
+    for (const obj of APP.objects) {
+      if (obj.id !== APP.selectedId && !obj.locked && !APP.physicsEnabled) {
+        obj.mesh.rotation.y += 0.003;
+      }
+    }
+
+    APP.renderer.render(APP.scene, APP.camera);
+  }
+  requestAnimationFrame(frame);
+}
+
+// ---------------------------------------------------------------
+//  METRICS UPDATE
+// ---------------------------------------------------------------
+function updateMetrics() {
+  const fps = APP.fps;
+  const label = document.getElementById('fps-label');
+  const fill = document.getElementById('fps-fill');
+  label.textContent = fps + ' FPS';
+  label.className = 'fps-label';
+  if (fps >= 50) { label.style.color = 'var(--green)'; fill.style.width = '100%'; }
+  else if (fps >= 30) { label.style.color = 'var(--amber)'; fill.style.width = (fps/60*100)+'%'; }
+  else { label.style.color = 'var(--magenta)'; fill.style.width = (fps/60*100)+'%'; }
+
+  document.getElementById('m-frametime').textContent = APP.frameTime.toFixed(1) + 'ms';
+  document.getElementById('m-objects').textContent = APP.objects.length;
+
+  // Poly count estimate
+  let polys = 0;
+  for (const obj of APP.objects) {
+    const geo = obj.mesh.geometry;
+    if (geo.index) polys += geo.index.count / 3;
+    else if (geo.attributes.position) polys += geo.attributes.position.count / 3;
+  }
+  document.getElementById('m-polys').textContent = Math.round(polys);
+
+  const info = APP.renderer.info;
+  document.getElementById('m-draws').textContent = info.render.calls;
+}
+
+// ---------------------------------------------------------------
+//  GESTURE HUD UPDATE
+// ---------------------------------------------------------------
+function updateGestureHUD(name, icon, action, confidence) {
+  document.getElementById('gesture-icon').textContent = icon;
+  document.getElementById('gesture-name').textContent = name;
+  document.getElementById('gesture-action').textContent = action;
+  const pct = Math.round(confidence * 100);
+  document.getElementById('conf-bar').style.width = pct + '%';
+  document.getElementById('conf-pct').textContent = pct + '%';
+}
+
+// ---------------------------------------------------------------
+//  TOOLTIP
+// ---------------------------------------------------------------
+function showTooltip(obj) {
+  const tt = document.getElementById('obj-tooltip');
+  document.getElementById('tt-title').textContent = obj.type.toUpperCase() + ' #' + obj.id;
+  document.getElementById('tt-type').textContent = obj.type;
+  document.getElementById('tt-mat').textContent = obj.material;
+  const p = obj.mesh.position;
+  document.getElementById('tt-pos').textContent =
+    `${p.x.toFixed(2)}, ${p.y.toFixed(2)}, ${p.z.toFixed(2)}`;
+  document.getElementById('tt-scale').textContent = obj.mesh.scale.x.toFixed(2) + '×';
+  tt.style.display = 'flex';
+  // Position near center
+  tt.style.left = '50%';
+  tt.style.top  = '30%';
+  tt.style.transform = 'translate(-50%,-50%)';
+  setTimeout(() => { tt.style.display = 'none'; }, 2500);
+}
+
+// ---------------------------------------------------------------
+//  UNDO / REDO
+// ---------------------------------------------------------------
+function pushUndo() {
+  const state = APP.objects.map(o => ({
+    id: o.id, type: o.type, material: o.material, color: o.color,
+    locked: o.locked,
+    pos: o.mesh.position.toArray(),
+    rot: o.mesh.rotation.toArray(),
+    scale: o.mesh.scale.toArray(),
+  }));
+  APP.undoStack.push(state);
+  if (APP.undoStack.length > 50) APP.undoStack.shift();
+  APP.redoStack = [];
+}
+
+function undoAction() {
+  if (!APP.undoStack.length) { toast('Nothing to undo', 'amber'); return; }
+  // Save current
+  const cur = APP.objects.map(o => ({
+    id: o.id, type: o.type, material: o.material, color: o.color,
+    locked: o.locked,
+    pos: o.mesh.position.toArray(),
+    rot: o.mesh.rotation.toArray(),
+    scale: o.mesh.scale.toArray(),
+  }));
+  APP.redoStack.push(cur);
+  restoreState(APP.undoStack.pop());
+  toast('Undo ↩', 'cyan');
+}
+
+function redoAction() {
+  if (!APP.redoStack.length) { toast('Nothing to redo', 'amber'); return; }
+  const cur = APP.objects.map(o => ({
+    id: o.id, type: o.type, material: o.material, color: o.color,
+    locked: o.locked,
+    pos: o.mesh.position.toArray(),
+    rot: o.mesh.rotation.toArray(),
+    scale: o.mesh.scale.toArray(),
+  }));
+  APP.undoStack.push(cur);
+  restoreState(APP.redoStack.pop());
+  toast('Redo ↪', 'cyan');
+}
+
+function restoreState(state) {
+  // Remove existing
+  for (const obj of APP.objects) { APP.scene.remove(obj.mesh); }
+  APP.objects = [];
+  APP.selectedId = null;
+  // Recreate
+  for (const s of state) {
+    const geo = createGeometry(s.type);
+    const mat = createMaterial(s.material, s.color);
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.castShadow = true; mesh.receiveShadow = true;
+    mesh.position.fromArray(s.pos);
+    mesh.rotation.fromArray(s.rot);
+    mesh.scale.fromArray(s.scale);
+    APP.scene.add(mesh);
+    APP.objects.push({
+      mesh, id: s.id, type: s.type, material: s.material,
+      color: s.color, locked: s.locked,
+      velocity: {x:0,y:0,z:0}, angularVelocity: {x:0.01,y:0.01,z:0},
+      floatPhase: Math.random()*Math.PI*2, floatSpeed:0.5, floatAmp:0.05,
+    });
+  }
+  updateSceneList(); updateMetrics();
+}
+
+// ---------------------------------------------------------------
+//  EXPORT SCENE
+// ---------------------------------------------------------------
+function exportScene() {
+  const data = {
+    version: '1.0',
+    timestamp: new Date().toISOString(),
+    objects: APP.objects.map(o => ({
+      id: o.id, type: o.type, material: o.material, color: o.color,
+      locked: o.locked,
+      position: o.mesh.position.toArray(),
+      rotation: o.mesh.rotation.toArray(),
+      scale: o.mesh.scale.toArray(),
+    })),
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'gesture-ar-scene.json';
+  a.click(); URL.revokeObjectURL(url);
+  toast('Scene exported ✦', 'green');
+}
+
+// ---------------------------------------------------------------
+//  VOICE COMMANDS
+// ---------------------------------------------------------------
+function initVoice() {
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    document.getElementById('voice-label').textContent = 'VOICE N/A';
+    return;
+  }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  APP.recognition = new SR();
+  APP.recognition.continuous = true;
+  APP.recognition.interimResults = false;
+  APP.recognition.lang = 'en-US';
+
+  APP.recognition.onresult = (e) => {
+    const transcript = e.results[e.results.length - 1][0].transcript.trim().toLowerCase();
+    processVoiceCommand(transcript);
+  };
+  APP.recognition.onerror = () => {
+    APP.voiceActive = false;
+    updateVoiceUI();
+  };
+}
+
+function processVoiceCommand(cmd) {
+  toast(`🎤 "${cmd}"`, 'amber');
+
+  if (cmd.includes('create') || cmd.includes('spawn')) {
+    const shapes = ['cube','sphere','cylinder','cone','torus','pyramid','capsule','plane'];
+    for (const s of shapes) {
+      if (cmd.includes(s)) { APP.spawnShape = s; spawnObject(s); return; }
+    }
+    spawnObject();
+  }
+  else if (cmd.includes('delete') || cmd.includes('remove')) { deleteSelected(); }
+  else if (cmd.includes('duplicate') || cmd.includes('copy')) { duplicateSelected(); }
+  else if (cmd.includes('lock')) { lockSelected(); }
+  else if (cmd.includes('clear')) { clearScene(); }
+  else if (cmd.includes('undo')) { undoAction(); }
+  else if (cmd.includes('redo')) { redoAction(); }
+  else if (cmd.includes('glass')) { applyMaterialToSelected('glass'); }
+  else if (cmd.includes('metal')) { applyMaterialToSelected('metal'); }
+  else if (cmd.includes('neon')) { applyMaterialToSelected('neon'); }
+  else if (cmd.includes('holographic')) { applyMaterialToSelected('holographic'); }
+  else if (cmd.includes('chrome')) { applyMaterialToSelected('chrome'); }
+  else if (cmd.includes('cyan')) { applyColorToSelected('#00F0FF'); }
+  else if (cmd.includes('magenta')) { applyColorToSelected('#FF007F'); }
+  else if (cmd.includes('green')) { applyColorToSelected('#00FF66'); }
+  else if (cmd.includes('amber') || cmd.includes('orange')) { applyColorToSelected('#FF9900'); }
+  else if (cmd.includes('white')) { applyColorToSelected('#FFFFFF'); }
+  else if (cmd.includes('physics on')) { APP.physicsEnabled = true; updatePhysicsUI(); }
+  else if (cmd.includes('physics off')) { APP.physicsEnabled = false; updatePhysicsUI(); }
+  else if (cmd.includes('export')) { exportScene(); }
+  else { toast('Command not recognized', 'red'); }
+}
+
+function applyMaterialToSelected(matType) {
+  const sel = getSelectedObject();
+  if (!sel) return;
+  pushUndo();
+  sel.mesh.material.dispose();
+  sel.mesh.material = createMaterial(matType, sel.color);
+  sel.material = matType;
+  toast(`Material → ${matType}`, 'cyan');
+}
+
+function applyColorToSelected(color) {
+  const sel = getSelectedObject();
+  if (!sel) return;
+  pushUndo();
+  sel.mesh.material.color = new THREE.Color(color);
+  if (sel.mesh.material.emissive) sel.mesh.material.emissive = new THREE.Color(color);
+  sel.color = color;
+  toast(`Color → ${color}`, 'cyan');
+}
+
+function toggleVoice() {
+  if (!APP.recognition) { toast('Voice not supported in this browser', 'amber'); return; }
+  APP.voiceActive = !APP.voiceActive;
+  if (APP.voiceActive) {
+    APP.recognition.start();
+    toast('🎤 Voice commands active', 'amber');
+  } else {
+    APP.recognition.stop();
+    toast('🎤 Voice off', 'amber');
+  }
+  updateVoiceUI();
+}
+
+function updateVoiceUI() {
+  const el = document.getElementById('voice-indicator');
+  const lbl = document.getElementById('voice-label');
+  el.classList.toggle('listening', APP.voiceActive);
+  lbl.textContent = APP.voiceActive ? 'LISTENING' : 'VOICE OFF';
+  lbl.className = 'voice-label' + (APP.voiceActive ? ' active' : '');
+}
+
+// Voice bar animation
+setInterval(() => {
+  if (!APP.voiceActive) return;
+  document.querySelectorAll('.voice-bar').forEach(bar => {
+    bar.style.height = (4 + Math.random() * 18) + 'px';
+  });
+}, 120);
+
+// ---------------------------------------------------------------
+//  UI CALLBACKS
+// ---------------------------------------------------------------
+function selectShape(el, shape) {
+  document.querySelectorAll('.shape-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  APP.spawnShape = shape;
+}
+
+function selectMaterial(el, mat) {
+  document.querySelectorAll('.mat-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  APP.spawnMaterial = mat;
+  // Also apply to selected object
+  applyMaterialToSelected(mat);
+}
+
+function selectColor(el, color) {
+  document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+  el.classList.add('selected');
+  APP.spawnColor = color;
+  applyColorToSelected(color);
+}
+
+function onScaleSlider(val) {
+  APP.spawnScale = parseFloat(val);
+  document.getElementById('scale-val').textContent = parseFloat(val).toFixed(1) + '×';
+  const sel = getSelectedObject();
+  if (sel && !sel.locked) { sel.mesh.scale.setScalar(parseFloat(val)); }
+}
+
+function updateScaleSlider(val) {
+  const s = Math.min(3, Math.max(0.2, val));
+  document.getElementById('scale-slider').value = s;
+  document.getElementById('scale-val').textContent = s.toFixed(1) + '×';
+}
+
+function onOpacitySlider(val) {
+  document.getElementById('opacity-val').textContent = Math.round(val*100)+'%';
+  const sel = getSelectedObject();
+  if (sel) { sel.mesh.material.opacity = parseFloat(val); sel.mesh.material.transparent = val < 1; }
+}
+
+function onEmissiveSlider(val) {
+  document.getElementById('emissive-val').textContent = Math.round(val*100)+'%';
+  const sel = getSelectedObject();
+  if (sel && sel.mesh.material.emissiveIntensity !== undefined) {
+    sel.mesh.material.emissiveIntensity = parseFloat(val);
+  }
+}
+
+function togglePhysics() {
+  APP.physicsEnabled = !APP.physicsEnabled;
+  updatePhysicsUI();
+  toast(APP.physicsEnabled ? '⚛ Physics ON — gravity enabled' : '⚛ Physics OFF', 'amber');
+}
+
+function updatePhysicsUI() {
+  const pill = document.getElementById('physics-pill');
+  pill.classList.toggle('active', APP.physicsEnabled);
+  document.getElementById('m-gravity').textContent = APP.physicsEnabled ? 'ON' : 'OFF';
+  document.getElementById('m-gravity').className = 'metric-value' + (APP.physicsEnabled ? ' green' : ' amber');
+  document.getElementById('floor-indicator').classList.toggle('visible', APP.physicsEnabled);
+}
+
+function toggleDebug() {
+  APP.debugMode = !APP.debugMode;
+  const pill = document.getElementById('debug-pill');
+  pill.classList.toggle('active', APP.debugMode);
+  const btn = document.getElementById('btn-debug');
+  btn.classList.toggle('active', APP.debugMode);
+  if (!APP.debugMode) {
+    const ctx = document.getElementById('mediapipe-canvas').getContext('2d');
+    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+  }
+  toast(APP.debugMode ? '🔬 Debug overlays ON' : '🔬 Debug overlays OFF', 'cyan');
+}
+
+function setMode(mode) {
+  APP.mode = mode;
+  ['select','move','rotate','scale'].forEach(m => {
+    document.getElementById('btn-'+m).classList.toggle('active', m === mode);
+  });
+}
+
+// ---------------------------------------------------------------
+//  MOUSE / TOUCH INTERACTION (fallback for non-gesture)
+// ---------------------------------------------------------------
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+let mouseDown = false, lastMouse = { x:0, y:0 };
+
+document.addEventListener('mousedown', (e) => {
+  if (e.target.closest('#app') && !e.target.closest('canvas')) return;
+  mouseDown = true;
+  lastMouse = { x: e.clientX, y: e.clientY };
+
+  mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, APP.camera);
+
+  const meshes = APP.objects.map(o => o.mesh);
+  const hits = raycaster.intersectObjects(meshes, true);
+  if (hits.length) {
+    const hitMesh = hits[0].object.isMesh ? hits[0].object : hits[0].object.parent;
+    const obj = APP.objects.find(o => o.mesh === hitMesh || o.mesh === hitMesh.parent);
+    if (obj) {
+      selectObject(obj.id);
+      updateSceneList();
+      APP.grabbedId = obj.id;
+      showTooltip(obj);
+    }
+  } else {
+    APP.selectedId = null;
+    updateSceneList();
+  }
+});
+
+document.addEventListener('mousemove', (e) => {
+  if (!mouseDown || !APP.grabbedId) return;
+  const dx = (e.clientX - lastMouse.x) / window.innerWidth * 6;
+  const dy = -(e.clientY - lastMouse.y) / window.innerHeight * 4;
+  lastMouse = { x: e.clientX, y: e.clientY };
+
+  const obj = APP.objects.find(o => o.id === APP.grabbedId);
+  if (!obj || obj.locked) return;
+
+  if (APP.mode === 'move' || APP.mode === 'select') {
+    obj.mesh.position.x += dx;
+    obj.mesh.position.y += dy;
+  } else if (APP.mode === 'rotate') {
+    obj.mesh.rotation.y += dx * 3;
+    obj.mesh.rotation.x += dy * 3;
+  } else if (APP.mode === 'scale') {
+    const s = Math.max(0.1, obj.mesh.scale.x + (dx + dy) * 1.5);
+    obj.mesh.scale.setScalar(s);
+    updateScaleSlider(s);
+  }
+});
+
+document.addEventListener('mouseup', () => {
+  mouseDown = false;
+  APP.grabbedId = null;
+});
+
+// Mouse wheel to scale
+document.addEventListener('wheel', (e) => {
+  const sel = getSelectedObject();
+  if (!sel || sel.locked) return;
+  const delta = -e.deltaY * 0.001;
+  const s = Math.max(0.1, Math.min(8, sel.mesh.scale.x + delta));
+  sel.mesh.scale.setScalar(s);
+  updateScaleSlider(s);
+}, { passive: true });
+
+// Double-click to duplicate
+document.addEventListener('dblclick', (e) => {
+  if (e.target.closest('#app') && !e.target.closest('canvas')) return;
+  duplicateSelected();
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT') return;
+  switch(e.key) {
+    case 'Delete': case 'Backspace': deleteSelected(); break;
+    case 'd': case 'D': if(e.ctrlKey||e.metaKey) { e.preventDefault(); duplicateSelected(); } break;
+    case 'z': case 'Z': if(e.ctrlKey||e.metaKey) { e.preventDefault(); e.shiftKey ? redoAction() : undoAction(); } break;
+    case '1': setMode('select'); break;
+    case '2': setMode('move'); break;
+    case '3': setMode('rotate'); break;
+    case '4': setMode('scale'); break;
+    case ' ': spawnObject(); break;
+    case 'p': togglePhysics(); break;
+    case 'g': toggleDebug(); break;
+    case 'v': toggleVoice(); break;
+  }
+});
+
+// ---------------------------------------------------------------
+//  TOAST NOTIFICATIONS
+// ---------------------------------------------------------------
+function toast(msg, type = 'cyan', duration = 2800) {
+  const c = document.getElementById('toast-container');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  c.appendChild(el);
+  setTimeout(() => {
+    el.style.opacity = '0'; el.style.transition = '0.4s ease';
+    setTimeout(() => el.remove(), 400);
+  }, duration);
+}
+
+// ---------------------------------------------------------------
+//  AMBIENT PARTICLE SYSTEM (holographic atmosphere)
+// ---------------------------------------------------------------
+function createParticleField() {
+  const count = 120;
+  const geo = new THREE.BufferGeometry();
+  const pos = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    pos[i*3]   = (Math.random() - 0.5) * 12;
+    pos[i*3+1] = (Math.random() - 0.5) * 8;
+    pos[i*3+2] = (Math.random() - 0.5) * 6 - 3;
+  }
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const mat = new THREE.PointsMaterial({
+    color: 0x00F0FF, size: 0.025, transparent: true, opacity: 0.4,
+    blending: THREE.AdditiveBlending, depthWrite: false,
+  });
+  const points = new THREE.Points(geo, mat);
+  APP.scene.add(points);
+
+  // Animate
+  let t = 0;
+  function animParticles() {
+    t += 0.004;
+    const positions = geo.attributes.position.array;
+    for (let i = 0; i < count; i++) {
+      positions[i*3+1] += Math.sin(t + i * 0.5) * 0.0008;
+      positions[i*3]   += Math.cos(t + i * 0.3) * 0.0005;
+    }
+    geo.attributes.position.needsUpdate = true;
+    requestAnimationFrame(animParticles);
+  }
+  animParticles();
+}
+
+// ---------------------------------------------------------------
+//  INIT
+// ---------------------------------------------------------------
+window.addEventListener('load', () => {
+  boot().then(() => {
+    createParticleField();
+  });
+});
+</script>
+</body>
+</html>
