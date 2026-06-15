@@ -13,7 +13,7 @@
 
 **GestureAR Studio** is an interactive, browser-based 3D workspace designed for real-time spatial computing without requiring dedicated VR hardware. By leveraging your webcam and microphone, the application maps spatial workflows onto a 3D WebGL engine, allowing you to create, manipulate, and simulate physics on 3D primitives completely through **natural hand gestures** and **voice commands**.
 
-> 💡 **Presentation Node:** Open `[gesture-ar-studio.html](https://devesh-gawai.github.io/web-practice-project/gesture-ar-studio/GESTURE_AR_STUDIO.html)` directly in any modern browser, grant webcam access, and instantly interact with a fluid, multi-modal augmented workspace!
+> 💡 **Presentation Node:** Open https://devesh-gawai.github.io/web-practice-project/gesture-ar-studio/GESTURE_AR_STUDIO.html directly in any modern browser, grant webcam access, and instantly interact with a fluid, multi-modal augmented workspace!
 
 ---
 
