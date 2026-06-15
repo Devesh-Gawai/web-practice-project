@@ -1,159 +1,382 @@
-# ✦ GestureAR Studio v1.0 ✦
+<div align="center">
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Version-1.0.0-cyan.svg?style=for-the-badge" alt="Version" />
-  <img src="https://img.shields.io/badge/Environment-Web_Browser-magenta.svg?style=for-the-badge" alt="Environment" />
-  <img src="https://img.shields.io/badge/Maintained-Practice_Project-orange.svg?style=for-the-badge" alt="Status" />
-  <img src="https://img.shields.io/badge/AI_Assisted-Claude_Sonnet_4.6-purple.svg?style=for-the-badge" alt="AI Assisted" />
-</p>
+# ✦ GESTURE AR STUDIO ✦
 
----
+### Control 3D Objects with Your Hands & Voice — Directly in the Browser
 
-## 🚀 Overview
+<img src="assets/banner.gif" width="100%"/>
 
-**GestureAR Studio** is an interactive, browser-based 3D workspace designed for real-time spatial computing without requiring dedicated VR hardware. By leveraging your webcam and microphone, the application maps spatial workflows onto a 3D WebGL engine, allowing you to create, manipulate, and simulate physics on 3D primitives completely through **natural hand gestures** and **voice commands**.
-
-> 💡 **Presentation Node:** Open https://devesh-gawai.github.io/web-practice-project/gesture-ar-studio/GESTURE_AR_STUDIO.html directly in any modern browser, grant webcam access, and instantly interact with a fluid, multi-modal augmented workspace!
+![Status](https://img.shields.io/badge/Status-Active-success?style=for-the-badge)
+![AI Assisted](https://img.shields.io/badge/AI-Assisted-blue?style=for-the-badge)
+![Three.js](https://img.shields.io/badge/Three.js-3D-black?style=for-the-badge)
+![WebGL](https://img.shields.io/badge/WebGL-Enabled-orange?style=for-the-badge)
+![AR Inspired](https://img.shields.io/badge/AR-Inspired-purple?style=for-the-badge)
+![Open Source](https://img.shields.io/badge/Open-Source-green?style=for-the-badge)
 
 ---
 
-## 🎨 System Interface Presentation
+### 🎥 Live Demo
+
+👉 **Try it Here**
+
+https://devesh-gawai.github.io/web-practice-project/gesture-ar-studio/GESTURE_AR_STUDIO.html
+
+---
+
+### ⚠️ Important
+
+This project was built as a **personal learning & experimentation project**.
+
+It is:
+
+✅ AI-assisted (Claude Sonnet used extensively during development)
+
+✅ Independent
+
+✅ Non-commercial
+
+✅ Not affiliated with any organization
+
+✅ Built to explore browser-based AR-style interaction systems
+
+---
+
+</div>
+
+---
+
+# ✨ What is Gesture AR Studio?
+
+Gesture AR Studio is an experimental browser-based interactive 3D environment where users can manipulate virtual objects using:
+
+🖐️ Hand Gestures
+
+🎙️ Voice Commands
+
+🎨 Real-Time 3D Controls
+
+⚛️ Physics Simulation
+
+📊 Performance Analytics
+
+All running directly in the browser.
+
+No installation.
+
+No external software.
+
+Just open the page and start interacting.
+
+---
+
+# 🌟 Showcase
+
+<div align="center">
+
+| Gesture Control | Object Manipulation | Voice Commands |
+|:---:|:---:|:---:|
+| ![](assets/gesture.gif) | ![](assets/object.gif) | ![](assets/voice.gif) |
+
+</div>
+
+---
+
+# 🚀 Features
+
+## 🖐️ Gesture Recognition
+
+<table>
+<tr>
+<td>✋ Open Palm</td>
+<td>Select Objects</td>
+</tr>
+
+<tr>
+<td>🤏 Pinch</td>
+<td>Grab & Move</td>
+</tr>
+
+<tr>
+<td>🤞 Double Pinch</td>
+<td>Duplicate Objects</td>
+</tr>
+
+<tr>
+<td>✊ Fist</td>
+<td>Delete Objects</td>
+</tr>
+
+<tr>
+<td>☝️ Point</td>
+<td>Teleport Objects</td>
+</tr>
+
+<tr>
+<td>🖐️ Spread</td>
+<td>Scale Objects</td>
+</tr>
+
+<tr>
+<td>🤘 Rock</td>
+<td>Rotate Objects</td>
+</tr>
+
+<tr>
+<td>👍 Thumbs Up</td>
+<td>Lock / Unlock</td>
+</tr>
+
+</table>
+
+---
+
+## 🎙️ Voice Commands
 
 ```text
-┌──────────────────────────────────────────────────────────────────────────┐
-│                             HEADER BAR                                   │
-│  [✦ GESTURE AR STUDIO]       [• TRACKING]     [⚛ PHYSICS]    [🔬 DEBUG] │
-├─────────────────────────┬────────────────────────┬───────────────────────┤
-│                         │                        │                       │
-│       LEFT PANEL        │     CENTER CANVAS      │      RIGHT PANEL      │
-│  ┌───────────────────┐  │                        │  ┌─────────────────┐  │
-│  │  8x 3D Shapes     │  │     Camera Feed        │  │ Performance     │  │
-│  │  8x Materials    │  │          +             │  │ Metrics (FPS)   │  │
-│  │  7x Colors        │  │     3D Primitives      │  │ Hand Stats      │  │
-│  │  [＋ SPAWN OBJECT]│  │                        │  │ Selected Obj    │  │
-│  └───────────────────┘  │                        │  └─────────────────┘  │
-│                         │                        │                       │
-├─────────────────────────┴────────────────────────┴───────────────────────┤
-│  [↖ Mode Toolbar]          [✋ GESTURE HUD]            [🎤 Voice Listening]│
-└──────────────────────────────────────────────────────────────────────────┘
+Create Sphere
+Create Cube
+Delete
+Duplicate
+Undo
+Redo
+Physics On
+Physics Off
+Export Scene
+Apply Glass Material
+Change Color To Cyan
+```
 
+---
 
+# 🎨 Object Library
 
-✨ Key Features
-1. ✋ Real-time Hand Gesture Framework
-The system uses automated frames debouncing (4+ frames stabilization) to maximize recognition confidence:
+<table>
+<tr>
+<td>🧊 Cube</td>
+<td>⚽ Sphere</td>
+<td>🥫 Cylinder</td>
+<td>🔺 Cone</td>
+</tr>
 
-✋ Open Palm: Object Selection & Hovering (triggers a custom cyan screen ring highlight)
+<tr>
+<td>🍩 Torus</td>
+<td>▲ Pyramid</td>
+<td>💊 Capsule</td>
+<td>⬛ Plane</td>
+</tr>
+</table>
 
-🤏 Pinch Motion: Dynamic Grab & Move translation across standard 3D coordinate space with 35% linear interpolation (lerp) blending
+---
 
-🤞 Double Pinch: Object Cloning/Duplication (instantly copies shapes, colors, and materials with a 1.2s safety cooldown)
+# 🧪 Material System
 
-✊ Closed Fist: Object Deletion/Removal (wipes a target from the canvas, with instant Toast feedback)
+| Material | Description |
+|-----------|-------------|
+| ✨ Holographic | Futuristic transparent glow |
+| 🪟 Glass | Realistic transparency |
+| 🔩 Metal | Reflective metal surface |
+| 💡 Neon | Bright emissive glow |
+| 🪵 Wood | Organic appearance |
+| 🔵 Plastic | Smooth modern finish |
+| 🪞 Chrome | Mirror-like reflections |
+| ⬛ Carbon | Technical carbon-fiber look |
 
-☝️ Point Index: Teleportation tracking via camera-to-hand raycasting (15% snappy lerp tracking)
+---
 
-🖐️ Fingers Spread: Uniform Scaling Up transformation continuously at 0.8% change per frame
+# ⚛️ Physics Engine
 
-🤘 Rock Sign: Y-Axis continuous inspection rotation (0.04 rad/frame)
+```mermaid
+flowchart LR
 
-👍 Thumbs Up: Interactive Parameter Lock/Unlock state (protects nodes from accidental moves/deletions)
+A[Spawn Object]
+--> B[Gravity]
 
-2. 🎤 Natural Language Processing (Web Speech API)
-Control your environment flawlessly using continuous audio processing commands:
+B --> C[Collision Detection]
 
-Creation Pipeline: "Create Cube", "Spawn Sphere", "Create Torus", or "Create Pyramid"
+C --> D[Floor Bounce]
 
-Modification Matrix: "Delete Selected Object", "Duplicate Object", or "Lock/Unlock"
+D --> E[Friction]
 
-Material Shifting: "Apply Glass Material", "Make it Metal", "Neon", or "Apply Chrome"
+E --> F[Stable State]
+```
 
-Color Injection: "Change Color to Cyan", "Magenta", "Green", or "Amber"
+### Includes
 
-State Control: "Enable Physics", "Disable Gravity", "Clear Scene", or "Save Scene"
+✔ Gravity
 
-3. 🧪 Advanced Rendering & Physics Engine
-Material Presentation Matrix:
+✔ Collision Detection
 
-✨ Holographic - Translucent edges with a 40% emissive shimmer tint effect.
+✔ Object Interaction
 
-🪟 Glass - Low roughness, high-performance refraction and transmission optics.
+✔ Bounce & Friction
 
-🔩 Metal - Highly reflective, shiny polished element with 95% surface specular gloss.
+✔ Real-Time Updates
 
-💡 Neon - Bright self-illuminating shader boasting 120% emissive highlight rendering.
+---
 
-🪵 Wood / 🔵 Plastic / 🪞 Chrome / ⬛ Carbon - Diverse procedural and composite texturing.
+# 🏗️ Project Architecture
 
-Custom Kinematic Physics Sandbox: Toggle an active downward gravity grid field. Objects bounce off an implicit virtual floor layer with a structural 40% restitution value and 12% friction reductions, alongside elastic sphere-to-sphere target bounds collisions.
+```mermaid
+flowchart TD
 
-🛠️ Project Tech Architecture
-The architecture utilizes zero-dependency modular loading wrappers to minimize bundle friction:
+Camera --> HandTracking
 
+HandTracking --> GestureEngine
 
+GestureEngine --> ObjectController
 
+VoiceRecognition --> CommandParser
 
+CommandParser --> ObjectController
 
-[ Browser Event Thread ] ──> [ Web Speech API Engine ] ──> UI Notification Toast State
-                                      │
-[ Webcam Input Frame ]  ──> [ MediaPipe Pipeline ]     ──> Gestures Extraction HUD
-                                      │
-                                      ▼
-[ WebGL Render Canvas ] <── [ Three.js Renderer Core ]  <── [ Custom Physics Matrix ]
+ObjectController --> ThreeJS
 
+ThreeJS --> Renderer
 
+PhysicsEngine --> ThreeJS
 
+Renderer --> Browser
+```
 
+---
 
+# 📊 Performance Dashboard
 
+Real-time analytics:
 
-🤖 Built with AI Collaboration
-This system was ideated, structured, and implemented with extensive algorithmic pair-programming aid:
+- FPS Monitor
+- Frame Time
+- Gesture Confidence
+- Tracking Confidence
+- Object Count
+- Polygon Count
+- Collision Metrics
 
-AI Core Engine: Powered by Claude Sonnet 4.6
+---
 
-Role: Architectural design patterns, MediaPipe multi-dimensional landmark isolation parsing, optimization matrices, and documentation formulation.
+# 🎮 Controls
 
-📈 Roadmap / Engineering Enhancements
-The current architecture is solid, and I am looking to patch several algorithmic areas to improve processing speeds:
+| Key | Action |
+|------|---------|
+| 1 | Select Mode |
+| 2 | Move Mode |
+| 3 | Rotate Mode |
+| 4 | Scale Mode |
+| G | Debug Mode |
+| V | Voice Toggle |
+| P | Physics Toggle |
+| Space | Spawn Object |
+| Ctrl + Z | Undo |
+| Ctrl + Shift + Z | Redo |
 
-🎯 Hand-Object Coordination: Refining structural landmark proximity checks to eliminate minor translation drift during fast grab sequences.
+---
 
-⚡ Gesture Detection Velocity: Shifting standard debouncing frames parameters into adaptive micro-timed intervals to accelerate action recognition.
+# 🛠 Technologies
 
-🗣️ Voice Pipeline Operations: Injecting dynamic phrase matching patterns to reduce ambient background audio interference inside noisy environments.
+<div align="center">
 
-⚙️ Advanced Physics Libraries: Transitioning from simple geometric sphere-sphere bounding box approximations to a rigid body integration framework.
+| Frontend | Graphics | AI/Tracking |
+|-----------|-----------|-------------|
+| HTML5 | Three.js | Hand Tracking |
+| CSS3 | WebGL | Gesture Recognition |
+| JavaScript | 3D Rendering | Voice Commands |
 
-🤝 Open for Contributions!
-Contributions make the developer ecosystem thrive! If you'd like to help improve tracking mechanics, enhance shaders, or rewrite algorithmic logic, your support is incredibly welcome.
+</div>
 
-Fork the Project Repo
+---
 
-Create your Feature Branch (git checkout -b feature/AmazingFeature)
+# 📸 Screenshots
 
-Commit your Refactored changes (git commit -m 'Add some AmazingFeature')
+<div align="center">
 
-Push to the Branch (git push origin feature/AmazingFeature)
+<img src="assets/screenshot1.png" width="45%">
+<img src="assets/screenshot2.png" width="45%">
 
-Open a well-documented Pull Request
+<img src="assets/screenshot3.png" width="45%">
+<img src="assets/screenshot4.png" width="45%">
 
+</div>
 
+---
 
-⚠️ Disclaimer
-This repository represents a pure educational, foundational research, and personal practice project. * It is not affiliated, allocated to, endorsed by, or associated with any formal corporate entity, professional organization, university, or brand.
+# 🎯 Why This Project?
 
-All implementations are completed out of personal interest toward spatial engineering and real-time interaction models.
+The goal was to explore:
 
-The codebase is presented "as-is" for personal portfolio presentation and review under open-source educational terms. No liabilities are assumed, and no infringement or problematic application is intended.
+- Human-Computer Interaction
+- AI-Assisted Development
+- Browser-Based AR Experiences
+- Gesture Recognition Systems
+- Voice Controlled Interfaces
+- Real-Time 3D Graphics
 
+while learning through building.
 
+---
 
+# 🤝 Contributions Welcome
 
+This project is intentionally open for experimentation.
 
+Interested in:
 
+- Computer Vision
+- AR/VR
+- WebXR
+- Three.js
+- Gesture Systems
+- Performance Optimization
 
+Feel free to contribute.
 
+### Ways to Help
 
+🐛 Report bugs
 
+💡 Suggest features
 
+⚡ Improve performance
+
+🎨 Improve UI/UX
+
+🧪 Test gesture recognition
+
+📖 Improve documentation
+
+---
+
+# ⭐ Future Roadmap
+
+- [ ] WebXR Support
+- [ ] Multi-user Collaboration
+- [ ] Better Gesture Accuracy
+- [ ] Import Scene Feature
+- [ ] Advanced Physics Engine
+- [ ] Mobile Optimization
+- [ ] AI Scene Generation
+- [ ] Object Throwing Physics
+- [ ] Custom Workspaces
+
+---
+
+# 📜 License
+
+This repository is provided for learning and experimentation purposes.
+
+---
+
+<div align="center">
+
+### If you found this project interesting,
+
+⭐ Star the Repository
+
+🍴 Fork It
+
+🤝 Contribute
+
+---
+
+Made with curiosity, experimentation, and AI-assisted development.
+
+</div>
