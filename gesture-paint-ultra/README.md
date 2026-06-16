@@ -15,7 +15,8 @@ A real-time hand gesture drawing application powered by MediaPipe Hands and Comp
 * 🔒 No backend or data collection
 
 ## 🖥️ Live Demo
-
+<img src="https://github.com/Devesh-Gawai/web-practice-project/raw/main/gesture-paint-ultra/demo.gif" width="100%"/>
+<img src="assets/banner.gif" width="100%"/>
 Try the application here:
 
 🔗 [**https://devesh-gawai.github.io/web-practice-project/gesture-paint-ultra/index.html**](https://devesh-gawai.github.io/web-practice-project/gesture-paint-ultra/index.html)
