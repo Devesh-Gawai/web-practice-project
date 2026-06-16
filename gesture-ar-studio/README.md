@@ -16,7 +16,8 @@
 ---
 
 ### 🎥 Live Demo
-
+<img src="https://github.com/Devesh-Gawai/web-practice-project/raw/main/gesture-ar-studio/video.gif" width="100%"/>
+<img src="assets/banner.gif" width="100%"/>
 👉 **Try it Here**
 
 https://devesh-gawai.github.io/web-practice-project/gesture-ar-studio/GESTURE_AR_STUDIO.html
