@@ -283,19 +283,6 @@ Real-time analytics:
 
 </div>
 
----
-
-# 📸 Screenshots
-
-<div align="center">
-
-<img src="assets/screenshot1.png" width="45%">
-<img src="assets/screenshot2.png" width="45%">
-
-<img src="assets/screenshot3.png" width="45%">
-<img src="assets/screenshot4.png" width="45%">
-
-</div>
 
 ---
 
