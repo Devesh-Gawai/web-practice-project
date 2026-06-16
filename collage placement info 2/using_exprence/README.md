@@ -45,7 +45,7 @@ A modern necessity. Media files demonstrate the seamless toggle between the deep
 
 | Hero Section & Analytics | Company Grid Layout |
 | :---: | :---: |
-| <img src="./Screenshot 2026-06-16 232819.jpg" alt="Hero Section" width="400"/> | <img src="./Screenshot 2026-06-16 232834.png" alt="Company Grid" width="400"/> |
+| <img src="[./Screenshot 2026-06-16 232819.jpg](https://github.com/Devesh-Gawai/web-practice-project/blob/main/collage%20placement%20info%202/using_exprence/Hero%20Section.png?raw=true)" alt="Hero Section" width="400"/> | <img src="./Screenshot 2026-06-16 232834.png" alt="Company Grid" width="400"/> |
 | *The landing view featuring dynamic charts and placement stats.* | *Dark mode grid view showcasing individual company requirements.* |
 
 ### 🎥 Feature Walk-throughs
