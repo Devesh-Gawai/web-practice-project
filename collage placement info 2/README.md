@@ -4,7 +4,7 @@
 
 ### Smart Placement Intelligence Dashboard for SGSITS Students
 
-<img src="assets/banner.png" width="100%"/>
+<img src="Screenshot%202026-06-17%20002119.png" width="100%" alt="SGSITS Placement Portal Banner"/>
 
 ![Status](https://img.shields.io/badge/Status-Active-success?style=for-the-badge)
 ![Academic Year](https://img.shields.io/badge/Academic%20Year-2025--26-blue?style=for-the-badge)
