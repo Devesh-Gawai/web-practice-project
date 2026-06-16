@@ -23,20 +23,6 @@ https://devesh-gawai.github.io/web-practice-project/collage%20placement%20info/
 
 ---
 
-## 🎬 Project Walkthrough
-
-```text
-collage placement info/video.mp4
-```
-
-Upload the video to the repository and replace the section above with:
-
-```html
-<video src="video.mp4" width="100%" controls></video>
-```
-
----
-
 ## ⚠️ Important
 
 This project was created as a personal learning and frontend development project.
